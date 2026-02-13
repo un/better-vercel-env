@@ -183,7 +183,7 @@
         "Errors are normalized",
         "Linked state is reusable"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 15,

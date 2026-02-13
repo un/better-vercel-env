@@ -5,3 +5,4 @@ export * from "./auth";
 export * from "./teams";
 export * from "./projects";
 export * from "./workspace";
+export * from "./link";
