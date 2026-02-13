@@ -1,4 +1,9 @@
-import type { EnvironmentColumn, EnvironmentId, RawVercelEnvRecord } from "@/lib/types";
+import type {
+  EnvironmentColumn,
+  EnvironmentId,
+  ProjectEnvSnapshot,
+  RawVercelEnvRecord,
+} from "@/lib/types";
 
 export interface ValueSourceRef {
   rowId: string;
@@ -10,7 +15,7 @@ export interface ValuePoolEntry {
   type: "plain" | "encrypted";
   comment: string | null;
   gitBranch: string | null;
-  readOnlyReason: "system" | "git_branch" | null;
+  readOnlyReason: "system" | "git_branch" | "encrypted" | null;
   sourceRows: ValueSourceRef[];
 }
 
@@ -30,6 +35,7 @@ export interface EnvMatrixDraft {
   environments: EnvironmentColumn[];
   rows: EnvMatrixRowDraft[];
   sourceRowIndex: Record<string, RawVercelEnvRecord>;
+  capabilities: ProjectEnvSnapshot["capabilities"];
   baselineHash: string;
 }
 

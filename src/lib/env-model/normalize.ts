@@ -147,6 +147,7 @@ export function normalizeSnapshotToDraft(snapshot: ProjectEnvSnapshot): EnvMatri
     environments: orderedSnapshot.environments,
     rows,
     sourceRowIndex,
+    capabilities: snapshot.capabilities,
     baselineHash: snapshot.baselineHash,
   };
 }

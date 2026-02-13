@@ -15,6 +15,10 @@ function createBaseDraft(rows: EnvMatrixDraft["rows"]): EnvMatrixDraft {
   return {
     projectId: "prj_1",
     baselineHash: "hash",
+    capabilities: {
+      supportsCustomEnvironments: true,
+      supportsBranchSpecificWrites: true,
+    },
     environments: [
       { id: "production", name: "Production", kind: "built_in", customEnvironmentId: null },
       { id: "preview", name: "Preview", kind: "built_in", customEnvironmentId: null },

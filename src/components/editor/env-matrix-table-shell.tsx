@@ -17,6 +17,8 @@ export function EnvMatrixTableShell({ disabled = false }: EnvMatrixTableShellPro
 
   const rows = draft?.rows ?? [];
   const environments = draft?.environments ?? [];
+  const supportsCustomEnvironments = draft?.capabilities.supportsCustomEnvironments ?? true;
+  const supportsBranchSpecificWrites = draft?.capabilities.supportsBranchSpecificWrites ?? true;
 
   const baselineRowsById = new Map((baseline?.rows ?? []).map((row) => [row.rowId, row]));
 
@@ -31,11 +33,11 @@ export function EnvMatrixTableShell({ disabled = false }: EnvMatrixTableShellPro
   }, new Map());
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-border bg-card">
+    <div className="overflow-x-auto rounded-2xl border border-border/70 bg-background shadow-[0_8px_20px_-18px_rgba(15,23,42,0.35)]">
       <table className="min-w-full border-collapse text-sm">
         <thead>
-          <tr className="border-b border-border bg-muted/40">
-            <th className="sticky left-0 z-20 bg-muted/40 px-3 py-2 text-left font-medium">Key</th>
+          <tr className="border-b border-border bg-muted/50">
+            <th className="sticky left-0 z-20 bg-muted/50 px-3 py-3 text-left font-semibold">Key</th>
             <th className="px-3 py-2 text-left font-medium">Values</th>
             {environments.map((environment) => (
               <th key={environment.id} className="px-3 py-2 text-left font-medium">
@@ -50,6 +52,10 @@ export function EnvMatrixTableShell({ disabled = false }: EnvMatrixTableShellPro
             const labelMap = new Map(
               row.values.map((value, index) => [value.id, `Value ${index + 1}`]),
             );
+            const rowHasEncryptedValue = row.values.some((value) => value.type === "encrypted");
+            const rowHasBranchSpecificValue = row.values.some((value) => Boolean(value.gitBranch));
+            const rowBlockedByBranchCapability = !supportsBranchSpecificWrites && rowHasBranchSpecificValue;
+            const rowEditsDisabled = disabled || rowHasEncryptedValue || rowBlockedByBranchCapability;
             const keyChanged = !baselineRow || baselineRow.key !== row.key;
             const valuesChanged =
               !baselineRow ||
@@ -57,7 +63,7 @@ export function EnvMatrixTableShell({ disabled = false }: EnvMatrixTableShellPro
                 JSON.stringify(row.values.map((value) => value.content));
 
             return (
-              <tr key={row.rowId} className="border-b border-border last:border-0">
+              <tr key={row.rowId} className="border-b border-border/80 transition-colors hover:bg-muted/20 last:border-0">
                 <td
                   className={`sticky left-0 z-10 px-3 py-2 align-top ${keyChanged ? "status-update" : "bg-card"}`}
                 >
@@ -70,13 +76,23 @@ export function EnvMatrixTableShell({ disabled = false }: EnvMatrixTableShellPro
                     value={row.key}
                     onChange={(event) => renameRowKey(row.rowId, event.target.value)}
                     aria-label={`Key for row ${row.rowId}`}
-                    disabled={disabled}
+                    disabled={rowEditsDisabled}
                   />
                   {!row.key.trim() ? (
                     <p className="mt-1 text-xs text-destructive">Key is required.</p>
                   ) : null}
                   {(keyCounts.get(row.key.trim().toLowerCase()) ?? 0) > 1 ? (
                     <p className="mt-1 text-xs text-destructive">Duplicate key. Use a unique key name.</p>
+                  ) : null}
+                  {rowHasEncryptedValue ? (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Key and assignment edits are locked because Vercel did not return a decryptable value.
+                    </p>
+                  ) : null}
+                  {rowBlockedByBranchCapability ? (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Branch-specific rows are read-only because CLI branch writes are disabled.
+                    </p>
                   ) : null}
                 </td>
                 <td className={`px-3 py-2 align-top text-muted-foreground ${valuesChanged ? "status-update" : ""}`}>
@@ -88,8 +104,13 @@ export function EnvMatrixTableShell({ disabled = false }: EnvMatrixTableShellPro
                         value={value.content}
                         onChange={(event) => editValue(row.rowId, value.id, event.target.value)}
                         aria-label={`Value ${index + 1} for ${row.key}`}
-                        disabled={disabled}
+                        disabled={rowEditsDisabled}
                       />
+                      {value.type === "encrypted" ? (
+                        <span className="mt-1 block text-xs text-muted-foreground">
+                          Value hidden by Vercel API. Type a new value to rotate it.
+                        </span>
+                      ) : null}
                     </label>
                   ))}
                   <Button
@@ -98,7 +119,7 @@ export function EnvMatrixTableShell({ disabled = false }: EnvMatrixTableShellPro
                     size="sm"
                     className="h-7 px-2 text-xs"
                     onClick={() => addValue(row.rowId)}
-                    disabled={disabled}
+                    disabled={rowEditsDisabled}
                   >
                     Add value
                   </Button>
@@ -107,6 +128,8 @@ export function EnvMatrixTableShell({ disabled = false }: EnvMatrixTableShellPro
                   const assignedValueId = row.assignments[environment.id];
                   const assignmentChanged =
                     !baselineRow || baselineRow.assignments[environment.id] !== assignedValueId;
+                  const columnBlockedByCapability =
+                    environment.kind === "custom" && !supportsCustomEnvironments;
 
                   return (
                     <td
@@ -124,7 +147,7 @@ export function EnvMatrixTableShell({ disabled = false }: EnvMatrixTableShellPro
                           )
                         }
                         aria-label={`${environment.name} assignment for ${row.key}`}
-                        disabled={disabled}
+                        disabled={rowEditsDisabled || columnBlockedByCapability}
                       >
                         <option value="">Unset</option>
                         {row.values.map((value) => (
@@ -133,6 +156,9 @@ export function EnvMatrixTableShell({ disabled = false }: EnvMatrixTableShellPro
                           </option>
                         ))}
                       </select>
+                      {columnBlockedByCapability ? (
+                        <p className="mt-1 text-xs text-muted-foreground">Custom environment edits are unsupported in CLI mode.</p>
+                      ) : null}
                     </td>
                   );
                 })}
