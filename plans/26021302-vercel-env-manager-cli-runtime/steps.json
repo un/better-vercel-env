@@ -339,7 +339,7 @@
         "Draft/baseline reset correctly",
         "UI shows latest values"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 28,
