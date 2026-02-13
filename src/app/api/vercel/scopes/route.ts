@@ -1,29 +1,37 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 
-import { createVercelClientFromRequest, SessionAuthError } from "@/lib/vercel/client";
+import { VercelCliError, getVercelCliAuthStatus, listVercelTeamScopes } from "@/lib/vercel-cli";
 import type { VercelScopeSummary } from "@/lib/types";
 
-export async function GET(request: NextRequest): Promise<NextResponse> {
+export async function GET(): Promise<NextResponse> {
   try {
-    const client = createVercelClientFromRequest(request);
-    const [user, teamsResult] = await Promise.all([
-      client.user.getAuthUser(),
-      client.teams.getTeams({ limit: 100 }),
-    ]);
+    const authStatus = await getVercelCliAuthStatus();
+    if (!authStatus.authenticated || !authStatus.identity) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: {
+            code: "unauthorized",
+            message: authStatus.message,
+          },
+        },
+        { status: 401 },
+      );
+    }
 
-    const authUser = user?.user;
+    const teams = await listVercelTeamScopes();
 
     const personalScope: VercelScopeSummary = {
-      id: authUser?.id ? `user:${authUser.id}` : "user:personal",
-      slug: authUser?.username ?? "personal",
-      name: authUser?.name ?? "Personal",
+      id: `user:${authStatus.identity.username}`,
+      slug: authStatus.identity.username,
+      name: "Personal",
       type: "personal",
     };
 
-    const teamScopes: VercelScopeSummary[] = teamsResult.teams.map((team) => ({
+    const teamScopes: VercelScopeSummary[] = teams.map((team) => ({
       id: team.id,
       slug: team.slug,
-      name: team.name ?? team.slug,
+      name: team.name,
       type: "team",
     }));
 
@@ -34,37 +42,16 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       },
     });
   } catch (error) {
-    if (error instanceof SessionAuthError) {
+    if (error instanceof VercelCliError && error.details.code === "cli_non_zero_exit") {
       return NextResponse.json(
         {
           ok: false,
           error: {
             code: "unauthorized",
-            message: "Sign in with a valid token first.",
+            message: "Run `vercel login` to authenticate CLI, then refresh.",
           },
         },
         { status: 401 },
-      );
-    }
-
-    const statusCode =
-      typeof error === "object" &&
-      error !== null &&
-      "statusCode" in error &&
-      typeof error.statusCode === "number"
-        ? error.statusCode
-        : null;
-
-    if (statusCode === 401 || statusCode === 403) {
-      return NextResponse.json(
-        {
-          ok: false,
-          error: {
-            code: "unauthorized",
-            message: "Token is invalid or has insufficient permissions.",
-          },
-        },
-        { status: statusCode },
       );
     }
 

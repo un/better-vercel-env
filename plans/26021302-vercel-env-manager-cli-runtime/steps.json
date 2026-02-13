@@ -135,7 +135,7 @@
         "Existing frontend contracts still work",
         "Auth errors are handled"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 11,
