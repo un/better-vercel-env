@@ -1,7 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { createVercelClientFromRequest, SessionAuthError } from "@/lib/vercel/client";
-import { loadProjectSnapshot } from "@/lib/vercel/project-snapshot";
+import { getVercelCliAuthStatus, loadProjectSnapshotFromCli } from "@/lib/vercel-cli";
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const projectId = request.nextUrl.searchParams.get("projectId")?.trim() ?? "";
@@ -21,29 +20,27 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   }
 
   try {
-    const client = createVercelClientFromRequest(request);
-    const teamId = scopeId.startsWith("user:") ? undefined : scopeId;
-
-    const snapshot = await loadProjectSnapshot(client, projectId, teamId);
-
-    return NextResponse.json({
-      ok: true,
-      data: snapshot,
-    });
-  } catch (error) {
-    if (error instanceof SessionAuthError) {
+    const authStatus = await getVercelCliAuthStatus();
+    if (!authStatus.authenticated) {
       return NextResponse.json(
         {
           ok: false,
           error: {
             code: "unauthorized",
-            message: "Sign in with a valid token first.",
+            message: authStatus.message,
           },
         },
         { status: 401 },
       );
     }
 
+    const snapshot = await loadProjectSnapshotFromCli({ projectId, scopeId });
+
+    return NextResponse.json({
+      ok: true,
+      data: snapshot,
+    });
+  } catch {
     return NextResponse.json(
       {
         ok: false,
