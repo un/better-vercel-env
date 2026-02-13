@@ -147,7 +147,7 @@
         "Imports resolve correctly",
         "Component examples render"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 12,
