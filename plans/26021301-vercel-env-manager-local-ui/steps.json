@@ -747,7 +747,7 @@
         "Each item has readable summary",
         "Panel updates in real time"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 62,

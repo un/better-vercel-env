@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 
+import { ChangeOrderPanel } from "@/components/editor/change-order-panel";
 import { EnvMatrixTableShell } from "@/components/editor/env-matrix-table-shell";
+import { ResponsivePanelLayout } from "@/components/responsive-panel-layout";
 import { Button } from "@/components/ui/button";
 import { useEnvDraftStore } from "@/lib/env-model";
 import type { ProjectEnvSnapshot } from "@/lib/types";
@@ -82,13 +84,20 @@ export function EditorSnapshotLoader({ projectId, scopeId }: EditorSnapshotLoade
   }
 
   return (
-    <div className="space-y-2 rounded-lg border border-border bg-card p-4">
-      <h2 className="text-lg font-medium">Snapshot loaded</h2>
-      <p className="text-sm text-muted-foreground">Project ID: {snapshot.projectId}</p>
-      <p className="text-sm text-muted-foreground">Environment columns: {snapshot.environments.length}</p>
-      <p className="text-sm text-muted-foreground">Env records: {snapshot.records.length}</p>
-      <p className="text-xs text-muted-foreground">Baseline hash: {snapshot.baselineHash}</p>
-      <EnvMatrixTableShell />
-    </div>
+    <ResponsivePanelLayout
+      panelTitle="Change order"
+      panelDescription="Operations update live as you edit."
+      main={
+        <div className="space-y-2 rounded-lg border border-border bg-card p-4">
+          <h2 className="text-lg font-medium">Snapshot loaded</h2>
+          <p className="text-sm text-muted-foreground">Project ID: {snapshot.projectId}</p>
+          <p className="text-sm text-muted-foreground">Environment columns: {snapshot.environments.length}</p>
+          <p className="text-sm text-muted-foreground">Env records: {snapshot.records.length}</p>
+          <p className="text-xs text-muted-foreground">Baseline hash: {snapshot.baselineHash}</p>
+          <EnvMatrixTableShell />
+        </div>
+      }
+      panel={<ChangeOrderPanel />}
+    />
   );
 }
