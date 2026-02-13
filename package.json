@@ -1,10 +1,45 @@
 {
   "name": "vercel-better-env",
   "version": "0.1.0",
-  "private": true,
+  "description": "Local-first Vercel environment variable manager with a key-first matrix UI.",
   "bin": {
-    "vercel-better-env": "./bin/vercel-better-env.js"
+    "vercel-better-env": "bin/vercel-better-env.js"
   },
+  "files": [
+    "bin",
+    "src/**/*",
+    "!src/**/*.test.ts",
+    "public",
+    "next.config.ts",
+    "postcss.config.mjs",
+    "components.json",
+    "tsconfig.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/omar/vercel-better-env.git"
+  },
+  "bugs": {
+    "url": "https://github.com/omar/vercel-better-env/issues"
+  },
+  "homepage": "https://github.com/omar/vercel-better-env#readme",
+  "keywords": [
+    "vercel",
+    "environment-variables",
+    "cli",
+    "nextjs",
+    "local-first"
+  ],
+  "author": "Omar",
+  "license": "MIT",
   "scripts": {
     "dev": "next dev --hostname 127.0.0.1 --port 6969",
     "build": "next build",
@@ -12,7 +47,8 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "vitest",
-    "verify": "npm run lint && npm run typecheck && npm run test -- --run"
+    "verify": "npm run lint && npm run typecheck && npm run test -- --run",
+    "prepublishOnly": "npm run verify"
   },
   "dependencies": {
     "@vercel/sdk": "^1.19.1",
