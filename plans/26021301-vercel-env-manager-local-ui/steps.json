@@ -219,7 +219,7 @@
         "Failure exits with non-zero status",
         "Script is executable"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 18,
