@@ -723,7 +723,7 @@
         "No active assignment gets deleted",
         "Delete count matches expected diff"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 60,

@@ -184,13 +184,58 @@ function planUpdateOperations(
   return operations;
 }
 
+function planDeleteOperations(
+  baselineRows: Map<string, EnvMatrixDraft["rows"][number]>,
+  draftRows: Map<string, EnvMatrixDraft["rows"][number]>,
+): EnvOperation[] {
+  const operations: EnvOperation[] = [];
+
+  baselineRows.forEach((baselineRow, rowId) => {
+    const draftRow = draftRows.get(rowId);
+    const desiredSignatures = draftRow
+      ? new Set(getDesiredCombos(draftRow).map((combo) => toComboSignature(combo)))
+      : new Set<string>();
+
+    baselineRow.sourceRows.forEach((sourceRow) => {
+      const signature = toComboSignature({
+        valueId: sourceRow.id,
+        value: sourceRow.value,
+        target: sourceRow.target,
+        customEnvironmentIds: sourceRow.customEnvironmentIds,
+      });
+
+      if (desiredSignatures.has(signature)) {
+        return;
+      }
+
+      operations.push({
+        id: `delete-row:${sourceRow.id}`,
+        kind: "delete_env",
+        summary: `Delete orphaned env row ${sourceRow.id}`,
+        rowId,
+        before: {
+          rowId,
+          key: baselineRow.key,
+          value: sourceRow.value,
+          target: sourceRow.target,
+          customEnvironmentIds: sourceRow.customEnvironmentIds,
+        },
+        after: null,
+        undoToken: `undo:delete-row:${sourceRow.id}`,
+      });
+    });
+  });
+
+  return operations;
+}
+
 export function planOperations(baseline: EnvMatrixDraft, draft: EnvMatrixDraft): PlannedOperations {
   const changes = detectDraftChanges(baseline, draft);
   const baselineRows = new Map(baseline.rows.map((row) => [row.rowId, row]));
   const draftRows = new Map(draft.rows.map((row) => [row.rowId, row]));
 
   const changeOperations: EnvOperation[] = changes
-    .filter((change) => change.kind !== "update")
+    .filter((change) => change.kind !== "update" && change.kind !== "delete")
     .map((change) => {
       const beforeRow = baselineRows.get(change.rowId);
       const afterRow = draftRows.get(change.rowId);
@@ -208,11 +253,14 @@ export function planOperations(baseline: EnvMatrixDraft, draft: EnvMatrixDraft):
 
   const createOperations = planCreateOperations(baselineRows, draftRows);
   const updateOperations = planUpdateOperations(baselineRows, draftRows);
+  const deleteOperations = planDeleteOperations(baselineRows, draftRows);
   const operationsById = new Map<string, EnvOperation>();
 
-  [...changeOperations, ...createOperations, ...updateOperations].forEach((operation) => {
-    operationsById.set(operation.id, operation);
-  });
+  [...changeOperations, ...createOperations, ...updateOperations, ...deleteOperations].forEach(
+    (operation) => {
+      operationsById.set(operation.id, operation);
+    },
+  );
 
   return { operations: Array.from(operationsById.values()) };
 }
