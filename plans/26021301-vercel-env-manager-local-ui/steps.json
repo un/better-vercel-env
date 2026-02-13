@@ -291,7 +291,7 @@
         "Invalid token format is rejected",
         "Token is tied to session id"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 24,
