@@ -123,7 +123,7 @@
         "Current scope is detectable",
         "Parser handles empty output"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 10,
