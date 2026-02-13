@@ -195,7 +195,7 @@
         "Output files are generated",
         "Failures are explicit"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 16,
