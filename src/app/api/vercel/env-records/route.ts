@@ -1,58 +1,14 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 
-import { createVercelClientFromRequest, SessionAuthError } from "@/lib/vercel/client";
-import { getProjectEnvRecords } from "@/lib/vercel/env-records";
-
-export async function GET(request: NextRequest): Promise<NextResponse> {
-  const projectId = request.nextUrl.searchParams.get("projectId")?.trim() ?? "";
-  const scopeId = request.nextUrl.searchParams.get("scopeId")?.trim() ?? "";
-
-  if (!projectId || !scopeId) {
-    return NextResponse.json(
-      {
-        ok: false,
-        error: {
-          code: "bad_request",
-          message: "projectId and scopeId are required.",
-        },
+export async function GET(): Promise<NextResponse> {
+  return NextResponse.json(
+    {
+      ok: false,
+      error: {
+        code: "bad_request",
+        message: "Use /api/vercel/project-snapshot for CLI-backed environment data.",
       },
-      { status: 400 },
-    );
-  }
-
-  try {
-    const client = createVercelClientFromRequest(request);
-    const teamId = scopeId.startsWith("user:") ? undefined : scopeId;
-
-    return NextResponse.json({
-      ok: true,
-      data: {
-        records: await getProjectEnvRecords(client, projectId, teamId),
-      },
-    });
-  } catch (error) {
-    if (error instanceof SessionAuthError) {
-      return NextResponse.json(
-        {
-          ok: false,
-          error: {
-            code: "unauthorized",
-            message: "Sign in with a valid token first.",
-          },
-        },
-        { status: 401 },
-      );
-    }
-
-    return NextResponse.json(
-      {
-        ok: false,
-        error: {
-          code: "internal_error",
-          message: "Unable to load environment records.",
-        },
-      },
-      { status: 500 },
-    );
-  }
+    },
+    { status: 410 },
+  );
 }

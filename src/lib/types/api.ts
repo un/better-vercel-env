@@ -21,10 +21,6 @@ export interface ApiSuccessResponse<T> {
 
 export type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse;
 
-export interface SessionStatus {
-  authenticated: boolean;
-}
-
 export interface CliAuthStatusData {
   authenticated: boolean;
   username: string | null;

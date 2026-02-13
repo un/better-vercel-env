@@ -351,7 +351,7 @@
         "Token cookie logic is removed",
         "No stale references remain"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 29,
