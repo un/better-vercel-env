@@ -399,7 +399,7 @@
         "Users can search projects",
         "Project click navigates to env editor"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 33,

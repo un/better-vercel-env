@@ -1,3 +1,13 @@
+import { AppShell } from "@/components/app-shell";
+import { ProjectsBrowser } from "@/components/projects/projects-browser";
+
 export default function ProjectsPage() {
-  return <main className="p-6">Project browser setup is in progress.</main>;
+  return (
+    <AppShell
+      heading="Select a project"
+      subheading="Choose an account scope and project to open the env matrix editor."
+    >
+      <ProjectsBrowser />
+    </AppShell>
+  );
 }
