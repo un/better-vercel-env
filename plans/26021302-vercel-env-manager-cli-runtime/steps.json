@@ -111,7 +111,7 @@
         "No token cookie writes remain",
         "Routing still works"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 9,
