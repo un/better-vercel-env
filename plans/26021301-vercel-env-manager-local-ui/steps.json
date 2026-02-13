@@ -39,7 +39,7 @@
         "No broad ignore flags added",
         "App compiles with ts checks"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 3,
