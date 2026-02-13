@@ -23,6 +23,7 @@ function kindClass(kind: string): string {
 export function ChangeOrderPanel() {
   const baseline = useEnvDraftStore((state) => state.baseline);
   const draft = useEnvDraftStore((state) => state.draft);
+  const undoRowChange = useEnvDraftStore((state) => state.undoRowChange);
 
   const operations = useMemo(() => {
     if (!baseline || !draft) {
@@ -46,6 +47,13 @@ export function ChangeOrderPanel() {
             </span>
           </div>
           <p className="mt-2 text-sm">{operation.summary}</p>
+          <button
+            type="button"
+            className="mt-2 rounded-md border border-border px-2 py-1 text-xs font-medium hover:bg-accent"
+            onClick={() => undoRowChange(operation.rowId)}
+          >
+            Undo
+          </button>
         </div>
       ))}
     </div>

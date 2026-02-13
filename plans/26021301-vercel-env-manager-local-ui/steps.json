@@ -759,7 +759,7 @@
         "Undo reverts affected UI state",
         "Change item disappears after undo"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 63,

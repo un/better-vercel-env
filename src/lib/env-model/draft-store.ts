@@ -20,6 +20,7 @@ interface EnvDraftState {
   editValue: (rowId: string, valueId: string, content: string) => void;
   removeValue: (rowId: string, valueId: string) => void;
   setAssignment: (rowId: string, environmentId: EnvironmentId, valueId: string | null) => void;
+  undoRowChange: (rowId: string) => void;
   reset: () => void;
 }
 
@@ -249,6 +250,26 @@ export const useEnvDraftStore = create<EnvDraftState>((set) => ({
               },
             };
           }),
+        }),
+      };
+    });
+  },
+  undoRowChange: (rowId) => {
+    set((state) => {
+      if (!state.draft || !state.baseline) {
+        return state;
+      }
+
+      const baselineRow = state.baseline.rows.find((row) => row.rowId === rowId);
+      const nextRows = baselineRow
+        ? state.draft.rows.map((row) => (row.rowId === rowId ? structuredClone(baselineRow) : row))
+        : state.draft.rows.filter((row) => row.rowId !== rowId);
+
+      return {
+        ...state,
+        ...withComputedChanges(state, {
+          ...state.draft,
+          rows: nextRows,
         }),
       };
     });
