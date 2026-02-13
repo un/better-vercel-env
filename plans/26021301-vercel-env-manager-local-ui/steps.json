@@ -471,7 +471,7 @@
         "gitBranch-specific vars are clearly marked",
         "User understands limitations"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 39,

@@ -46,6 +46,12 @@ function normalizeProjectEnvsResponse(response: unknown): RawVercelEnvRecord[] {
         comment: typeof item.comment === "string" ? item.comment : null,
         gitBranch: typeof item.gitBranch === "string" ? item.gitBranch : null,
         system: item.type === "system" || item.system === true,
+        readOnlyReason:
+          item.type === "system" || item.system === true
+            ? "system"
+            : typeof item.gitBranch === "string" && item.gitBranch.length > 0
+              ? "git_branch"
+              : null,
       } satisfies RawVercelEnvRecord;
     })
     .filter((item) => item.id.length > 0 && item.key.length > 0);

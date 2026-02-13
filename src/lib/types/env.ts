@@ -19,6 +19,7 @@ export interface RawVercelEnvRecord {
   comment: string | null;
   gitBranch: string | null;
   system: boolean;
+  readOnlyReason: "system" | "git_branch" | null;
 }
 
 export interface ProjectEnvSnapshot {
