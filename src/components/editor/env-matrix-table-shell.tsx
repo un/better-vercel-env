@@ -3,6 +3,7 @@
 import { useEnvDraftStore } from "@/lib/env-model";
 
 export function EnvMatrixTableShell() {
+  const baseline = useEnvDraftStore((state) => state.baseline);
   const draft = useEnvDraftStore((state) => state.draft);
   const renameRowKey = useEnvDraftStore((state) => state.renameRowKey);
   const addValue = useEnvDraftStore((state) => state.addValue);
@@ -11,6 +12,8 @@ export function EnvMatrixTableShell() {
 
   const rows = draft?.rows ?? [];
   const environments = draft?.environments ?? [];
+
+  const baselineRowsById = new Map((baseline?.rows ?? []).map((row) => [row.rowId, row]));
 
   const keyCounts = rows.reduce<Map<string, number>>((result, row) => {
     const normalized = row.key.trim().toLowerCase();
@@ -38,13 +41,19 @@ export function EnvMatrixTableShell() {
         </thead>
         <tbody>
           {rows.map((row) => {
+            const baselineRow = baselineRowsById.get(row.rowId);
             const labelMap = new Map(
               row.values.map((value, index) => [value.id, `Value ${index + 1}`]),
             );
+            const keyChanged = !baselineRow || baselineRow.key !== row.key;
+            const valuesChanged =
+              !baselineRow ||
+              JSON.stringify(baselineRow.values.map((value) => value.content)) !==
+                JSON.stringify(row.values.map((value) => value.content));
 
             return (
               <tr key={row.rowId} className="border-b border-border last:border-0">
-                <td className="px-3 py-2 align-top">
+                <td className={`px-3 py-2 align-top ${keyChanged ? "status-update" : ""}`}>
                   <input
                     className={`w-full rounded-md border px-2 py-1 text-sm ${
                       !row.key.trim() || (keyCounts.get(row.key.trim().toLowerCase()) ?? 0) > 1
@@ -62,7 +71,7 @@ export function EnvMatrixTableShell() {
                     <p className="mt-1 text-xs text-destructive">Duplicate key. Use a unique key name.</p>
                   ) : null}
                 </td>
-                <td className="px-3 py-2 align-top text-muted-foreground">
+                <td className={`px-3 py-2 align-top text-muted-foreground ${valuesChanged ? "status-update" : ""}`}>
                   {row.values.map((value, index) => (
                     <label key={value.id} className="mb-2 block">
                       <span className="mb-1 block text-xs font-medium text-foreground">Value {index + 1}</span>
@@ -84,9 +93,14 @@ export function EnvMatrixTableShell() {
                 </td>
                 {environments.map((environment) => {
                   const assignedValueId = row.assignments[environment.id];
+                  const assignmentChanged =
+                    !baselineRow || baselineRow.assignments[environment.id] !== assignedValueId;
 
                   return (
-                    <td key={`${row.rowId}:${environment.id}`} className="px-3 py-2 align-top text-muted-foreground">
+                    <td
+                      key={`${row.rowId}:${environment.id}`}
+                      className={`px-3 py-2 align-top text-muted-foreground ${assignmentChanged ? "status-update" : ""}`}
+                    >
                       <select
                         className="w-full rounded-md border border-border px-2 py-1 text-sm"
                         value={assignedValueId ?? ""}
