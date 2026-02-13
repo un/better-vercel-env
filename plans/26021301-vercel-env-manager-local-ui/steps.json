@@ -99,7 +99,7 @@
         "Host binds to 127.0.0.1",
         "Startup command is documented"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 8,
