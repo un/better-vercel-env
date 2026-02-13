@@ -51,7 +51,7 @@
         "Timeout kills long-running commands",
         "Stdout/stderr are captured"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 4,
