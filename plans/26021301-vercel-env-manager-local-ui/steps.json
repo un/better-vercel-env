@@ -495,7 +495,7 @@
         "Types cover all planned states",
         "No ambiguous any fields"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 41,
