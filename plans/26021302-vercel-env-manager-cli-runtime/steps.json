@@ -75,7 +75,7 @@
         "Unauthenticated state is explicit",
         "Errors are actionable"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 6,
