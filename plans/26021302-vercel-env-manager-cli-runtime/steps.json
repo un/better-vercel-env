@@ -279,7 +279,7 @@
         "Ordering is deterministic",
         "Unsupported ops map to skipped"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 23,

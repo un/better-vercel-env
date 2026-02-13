@@ -11,3 +11,4 @@ export * from "./dotenv-parser";
 export * from "./reserved-keys";
 export * from "./snapshot";
 export * from "./load-project-snapshot";
+export * from "./apply-builder";
