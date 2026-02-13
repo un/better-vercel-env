@@ -147,7 +147,7 @@
         "Project fields normalize correctly",
         "Search remains functional"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 12,
