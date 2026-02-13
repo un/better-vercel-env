@@ -25,12 +25,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/omar/vercel-better-env.git"
+    "url": "git+https://github.com/un/vercel-better-env.git"
   },
   "bugs": {
-    "url": "https://github.com/omar/vercel-better-env/issues"
+    "url": "https://github.com/un/vercel-better-env/issues"
   },
-  "homepage": "https://github.com/omar/vercel-better-env#readme",
+  "homepage": "https://github.com/un/vercel-better-env#readme",
   "keywords": [
     "vercel",
     "environment-variables",
