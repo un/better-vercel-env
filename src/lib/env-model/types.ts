@@ -29,6 +29,7 @@ export interface EnvMatrixDraft {
   projectId: string;
   environments: EnvironmentColumn[];
   rows: EnvMatrixRowDraft[];
+  sourceRowIndex: Record<string, RawVercelEnvRecord>;
   baselineHash: string;
 }
 

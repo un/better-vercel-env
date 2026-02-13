@@ -80,10 +80,19 @@ export function normalizeSnapshotToDraft(snapshot: ProjectEnvSnapshot): EnvMatri
     normalizeKeyGroup(key, records, snapshot),
   );
 
+  const sourceRowIndex = snapshot.records.reduce<Record<string, RawVercelEnvRecord>>(
+    (result, row) => {
+      result[row.id] = row;
+      return result;
+    },
+    {},
+  );
+
   return {
     projectId: snapshot.projectId,
     environments: snapshot.environments,
     rows,
+    sourceRowIndex,
     baselineHash: snapshot.baselineHash,
   };
 }

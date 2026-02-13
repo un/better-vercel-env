@@ -519,7 +519,7 @@
         "Planner can trace row origins",
         "No identity loss during normalize"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 43,
