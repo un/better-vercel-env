@@ -459,7 +459,7 @@
         "Baseline hash/version is included",
         "Response is typed"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 38,
