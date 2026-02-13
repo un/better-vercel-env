@@ -411,7 +411,7 @@
         "No broken placeholder states",
         "Actions disable until data loads"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 34,
