@@ -291,7 +291,7 @@
         "Add/update succeeds with --force",
         "No value leakage in logs"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 24,
