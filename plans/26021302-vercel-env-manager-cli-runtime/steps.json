@@ -159,7 +159,7 @@
         "Error mapping remains stable",
         "Projects browser still loads"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 13,

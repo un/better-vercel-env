@@ -1,46 +1,24 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { createVercelClientFromRequest, SessionAuthError } from "@/lib/vercel/client";
-import type { VercelProjectSummary } from "@/lib/types";
+import {
+  VercelCliError,
+  getVercelCliAuthStatus,
+  listVercelProjects,
+  listVercelTeamScopes,
+} from "@/lib/vercel-cli";
 
-const MAX_PAGES = 10;
-const PAGE_SIZE = "100";
-
-interface RawProjectLike {
-  id: string;
-  name: string;
-  framework?: string | null;
-  updatedAt?: number;
-}
-
-function getProjectsFromResponse(response: unknown): RawProjectLike[] {
-  if (Array.isArray(response)) {
-    return response as RawProjectLike[];
+async function resolveScopeForCli(scopeId: string): Promise<string> {
+  if (scopeId.startsWith("user:")) {
+    return scopeId.replace("user:", "");
   }
 
-  if (typeof response === "object" && response !== null && "projects" in response) {
-    const projects = (response as { projects?: unknown }).projects;
-    if (Array.isArray(projects)) {
-      return projects as RawProjectLike[];
-    }
+  if (scopeId.startsWith("team:")) {
+    return scopeId.replace("team:", "");
   }
 
-  return [];
-}
-
-function getNextPageCursor(response: unknown): string | null {
-  if (typeof response !== "object" || response === null || !("pagination" in response)) {
-    return null;
-  }
-
-  const pagination = (response as { pagination?: { next?: string | number } }).pagination;
-  if (!pagination) {
-    return null;
-  }
-
-  return typeof pagination.next === "number" || typeof pagination.next === "string"
-    ? String(pagination.next)
-    : null;
+  const teams = await listVercelTeamScopes();
+  const team = teams.find((item) => item.id === scopeId);
+  return team ? team.slug : scopeId;
 }
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
@@ -61,39 +39,22 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   }
 
   try {
-    const client = createVercelClientFromRequest(request);
-    const teamId = scopeId.startsWith("user:") ? undefined : scopeId;
-
-    const projects: VercelProjectSummary[] = [];
-    let from: string | undefined;
-
-    for (let page = 0; page < MAX_PAGES; page += 1) {
-      const result = await client.projects.getProjects({
-        teamId,
-        from,
-        limit: PAGE_SIZE,
-        search: search || undefined,
-      });
-
-      const pageProjects = getProjectsFromResponse(result);
-
-      pageProjects.forEach((project) => {
-        projects.push({
-          id: project.id,
-          name: project.name,
-          framework: project.framework ?? null,
-          updatedAt: project.updatedAt ?? 0,
-        });
-      });
-
-      const nextPage = getNextPageCursor(result);
-
-      if (!nextPage) {
-        break;
-      }
-
-      from = nextPage;
+    const authStatus = await getVercelCliAuthStatus();
+    if (!authStatus.authenticated) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: {
+            code: "unauthorized",
+            message: authStatus.message,
+          },
+        },
+        { status: 401 },
+      );
     }
+
+    const scope = await resolveScopeForCli(scopeId);
+    const projects = await listVercelProjects(scope, search);
 
     return NextResponse.json({
       ok: true,
@@ -102,37 +63,16 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       },
     });
   } catch (error) {
-    if (error instanceof SessionAuthError) {
+    if (error instanceof VercelCliError && error.details.code === "cli_non_zero_exit") {
       return NextResponse.json(
         {
           ok: false,
           error: {
             code: "unauthorized",
-            message: "Sign in with a valid token first.",
+            message: "Unable to load projects from CLI scope. Check `vercel whoami` and `vercel switch`.",
           },
         },
         { status: 401 },
-      );
-    }
-
-    const statusCode =
-      typeof error === "object" &&
-      error !== null &&
-      "statusCode" in error &&
-      typeof error.statusCode === "number"
-        ? error.statusCode
-        : null;
-
-    if (statusCode === 401 || statusCode === 403) {
-      return NextResponse.json(
-        {
-          ok: false,
-          error: {
-            code: "unauthorized",
-            message: "Token is invalid or has insufficient permissions.",
-          },
-        },
-        { status: statusCode },
       );
     }
 
