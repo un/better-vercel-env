@@ -387,7 +387,7 @@
         "Pagination is handled",
         "Response shape is UI-ready"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 32,

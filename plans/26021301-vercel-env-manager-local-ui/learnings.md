@@ -2,6 +2,11 @@
 
 Use this file as a prepend-only log.
 
+## 2026-02-13 12:38 - Step 31 - projects response polymorphism
+- Context: Building paginated project listing through @vercel/sdk.
+- Learning: `projects.getProjects` typings can resolve to multiple response shapes, so code should normalize both array and object-with-pagination forms.
+- Impact: Use runtime shape guards when reading project lists and pagination cursors from SDK responses.
+
 ## 2026-02-13 12:31 - Step 25 - sdk error typing nuance
 - Context: Adding token validity checks with @vercel/sdk before session auth succeeds.
 - Learning: `@vercel/sdk` does not export `VercelError` at the package root in this setup.
