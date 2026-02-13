@@ -339,7 +339,7 @@
         "CTA is visible above the fold",
         "Users can continue after token paste"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 28,

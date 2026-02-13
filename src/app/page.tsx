@@ -15,6 +15,14 @@ export default function Home() {
           <p className="mt-1 text-sm text-muted-foreground">
             Paste a personal token to start a local-only session.
           </p>
+          <a
+            className="mt-3 inline-flex rounded-md border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-accent"
+            href="https://vercel.com/account/settings/tokens"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Generate token in Vercel settings
+          </a>
           <div className="mt-4">
             <TokenOnboardingForm />
           </div>
