@@ -87,7 +87,7 @@
         "Identity fields are present when logged in",
         "No secrets are returned"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 7,

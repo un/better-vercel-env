@@ -25,6 +25,13 @@ export interface SessionStatus {
   authenticated: boolean;
 }
 
+export interface CliAuthStatusData {
+  authenticated: boolean;
+  username: string | null;
+  activeScope: string | null;
+  message: string;
+}
+
 export interface VercelScopeSummary {
   id: string;
   slug: string;
