@@ -19,12 +19,16 @@ export interface RawVercelEnvRecord {
   comment: string | null;
   gitBranch: string | null;
   system: boolean;
-  readOnlyReason: "system" | "git_branch" | null;
+  readOnlyReason: "system" | "git_branch" | "encrypted" | null;
 }
 
 export interface ProjectEnvSnapshot {
   projectId: string;
   environments: EnvironmentColumn[];
   records: RawVercelEnvRecord[];
+  capabilities: {
+    supportsCustomEnvironments: boolean;
+    supportsBranchSpecificWrites: boolean;
+  };
   baselineHash: string;
 }

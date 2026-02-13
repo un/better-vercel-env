@@ -93,5 +93,9 @@ export function buildSnapshotFromPulledEnvs(
     projectId,
     environments: [...BUILT_IN_ENVIRONMENT_COLUMNS],
     records: toRecords(maps),
+    capabilities: {
+      supportsCustomEnvironments: false,
+      supportsBranchSpecificWrites: false,
+    },
   };
 }

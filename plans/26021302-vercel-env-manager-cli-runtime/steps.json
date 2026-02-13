@@ -255,7 +255,7 @@
         "Capabilities are emitted by backend",
         "UI can consume flags"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 21,

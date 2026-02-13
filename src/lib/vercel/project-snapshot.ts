@@ -31,6 +31,10 @@ export async function loadProjectSnapshot(
     projectId,
     environments,
     records,
+    capabilities: {
+      supportsCustomEnvironments: true,
+      supportsBranchSpecificWrites: true,
+    },
   };
 
   return {

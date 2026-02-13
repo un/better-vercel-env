@@ -7,6 +7,10 @@ describe("normalizeSnapshotToDraft", () => {
     const draft = normalizeSnapshotToDraft({
       projectId: "prj_123",
       baselineHash: "hash",
+      capabilities: {
+        supportsCustomEnvironments: true,
+        supportsBranchSpecificWrites: true,
+      },
       environments: [
         { id: "production", name: "Production", kind: "built_in", customEnvironmentId: null },
         { id: "preview", name: "Preview", kind: "built_in", customEnvironmentId: null },
@@ -71,6 +75,10 @@ describe("normalizeSnapshotToDraft", () => {
     const draft = normalizeSnapshotToDraft({
       projectId: "prj_123",
       baselineHash: "hash",
+      capabilities: {
+        supportsCustomEnvironments: true,
+        supportsBranchSpecificWrites: true,
+      },
       environments: [
         { id: "custom:ce_beta", name: "Beta", kind: "custom", customEnvironmentId: "ce_beta" },
         { id: "development", name: "Development", kind: "built_in", customEnvironmentId: null },
