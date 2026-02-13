@@ -6,6 +6,7 @@ import {
   type VercelCliCommandResult,
   type VercelCliCommandRunner,
 } from "./types";
+import { redactSensitiveText } from "./redact";
 
 const DEFAULT_TIMEOUT_MS = 20_000;
 
@@ -60,8 +61,8 @@ export class SpawnVercelCliRunner implements VercelCliCommandRunner {
                 ? "Vercel CLI not found. Install it and retry."
                 : "Failed to start Vercel CLI command.",
             exitCode: null,
-            stdout,
-            stderr,
+            stdout: redactSensitiveText(stdout),
+            stderr: redactSensitiveText(stderr),
           }),
         );
       });
@@ -84,8 +85,8 @@ export class SpawnVercelCliRunner implements VercelCliCommandRunner {
               code: "cli_timeout",
               message: "Vercel CLI command timed out.",
               exitCode: code,
-              stdout,
-              stderr,
+              stdout: redactSensitiveText(stdout),
+              stderr: redactSensitiveText(stderr),
             }),
           );
           return;
@@ -97,8 +98,8 @@ export class SpawnVercelCliRunner implements VercelCliCommandRunner {
               code: "cli_non_zero_exit",
               message: "Vercel CLI command failed.",
               exitCode: typeof code === "number" ? code : null,
-              stdout,
-              stderr,
+              stdout: redactSensitiveText(stdout),
+              stderr: redactSensitiveText(stderr),
             }),
           );
           return;

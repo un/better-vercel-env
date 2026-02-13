@@ -63,7 +63,7 @@
         "Runner applies redaction",
         "No plaintext secrets in error payloads"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 5,
