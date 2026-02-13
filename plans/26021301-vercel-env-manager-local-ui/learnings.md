@@ -2,6 +2,11 @@
 
 Use this file as a prepend-only log.
 
+## 2026-02-13 12:22 - Step 18 - orphan dev process risk
+- Context: Verifying startup URL output while repeatedly launching the CLI.
+- Learning: If the parent CLI exits without forwarding shutdown signals, Next dev can stay running and cause `EADDRINUSE` or `.next/dev/lock` errors on the next launch.
+- Impact: Ensure explicit signal forwarding and child cleanup in the CLI before relying on repeated local starts.
+
 ## 2026-02-13 12:14 - Step 12 - duplicate base applies
 - Context: Refining generated shadcn globals while finalizing Geist typography setup.
 - Learning: The generated `@layer base` block contained duplicate `@apply` lines, which is harmless but noisy.
