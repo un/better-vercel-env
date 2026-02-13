@@ -64,6 +64,12 @@ npm run verify
 - If apply returns conflict, reload the snapshot and re-apply with a fresh baseline hash.
 - If CLI commands fail, ensure `vercel` is installed and available on your `PATH`.
 
+## CLI capability caveats
+
+- Custom environment writes are currently unsupported through the CLI apply path in this app. These operations are marked as skipped with `unsupported_custom_environment`.
+- Branch-specific writes are capability-gated. When unsupported, related rows are read-only in the matrix.
+- Unsupported planner kinds are not silently dropped. They are included in apply results with `status: skipped` and a reason.
+
 ## Development notes
 
 - Stack: Next.js App Router, TypeScript, Tailwind, shadcn/ui, Zustand, Zod, Vercel CLI runtime adapter.
