@@ -267,7 +267,7 @@
         "Token can be set/get/clear",
         "No disk persistence path used"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 22,
