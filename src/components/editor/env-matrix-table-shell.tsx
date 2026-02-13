@@ -7,6 +7,7 @@ export function EnvMatrixTableShell() {
   const renameRowKey = useEnvDraftStore((state) => state.renameRowKey);
   const addValue = useEnvDraftStore((state) => state.addValue);
   const editValue = useEnvDraftStore((state) => state.editValue);
+  const setAssignment = useEnvDraftStore((state) => state.setAssignment);
 
   const rows = draft?.rows ?? [];
   const environments = draft?.environments ?? [];
@@ -83,11 +84,28 @@ export function EnvMatrixTableShell() {
                 </td>
                 {environments.map((environment) => {
                   const assignedValueId = row.assignments[environment.id];
-                  const label = assignedValueId ? labelMap.get(assignedValueId) ?? "Unknown value" : "Unset";
 
                   return (
                     <td key={`${row.rowId}:${environment.id}`} className="px-3 py-2 align-top text-muted-foreground">
-                      {label}
+                      <select
+                        className="w-full rounded-md border border-border px-2 py-1 text-sm"
+                        value={assignedValueId ?? ""}
+                        onChange={(event) =>
+                          setAssignment(
+                            row.rowId,
+                            environment.id,
+                            event.target.value ? event.target.value : null,
+                          )
+                        }
+                        aria-label={`${environment.name} assignment for ${row.key}`}
+                      >
+                        <option value="">Unset</option>
+                        {row.values.map((value) => (
+                          <option key={value.id} value={value.id}>
+                            {labelMap.get(value.id) ?? value.id}
+                          </option>
+                        ))}
+                      </select>
                     </td>
                   );
                 })}
