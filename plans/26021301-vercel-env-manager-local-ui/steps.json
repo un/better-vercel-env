@@ -423,7 +423,7 @@
         "Error state includes retry",
         "No blank screens on failure"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 35,
