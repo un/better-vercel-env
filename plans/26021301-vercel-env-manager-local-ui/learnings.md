@@ -2,6 +2,11 @@
 
 Use this file as a prepend-only log.
 
+## 2026-02-13 12:27 - Step 20 - process check false positives
+- Context: Validating that SIGINT/SIGTERM cleanup leaves no Next child process running.
+- Learning: `ps | rg "pattern"` can self-match the `rg` command, creating false zombie-process results.
+- Impact: Use regex patterns like `[n]ext/...` for process checks to avoid self-matching in validation scripts.
+
 ## 2026-02-13 12:22 - Step 18 - orphan dev process risk
 - Context: Verifying startup URL output while repeatedly launching the CLI.
 - Learning: If the parent CLI exits without forwarding shutdown signals, Next dev can stay running and cause `EADDRINUSE` or `.next/dev/lock` errors on the next launch.

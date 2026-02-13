@@ -255,7 +255,7 @@
         "No zombie child process remains",
         "Exit code behavior is consistent"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 21,

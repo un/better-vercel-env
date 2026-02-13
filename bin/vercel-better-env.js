@@ -71,8 +71,54 @@ async function main() {
     {
       stdio: ["inherit", "pipe", "pipe"],
       env: process.env,
+      detached: process.platform !== "win32",
     },
   );
+
+  let shuttingDown = false;
+  const safeKill = (pid, signal) => {
+    try {
+      process.kill(pid, signal);
+    } catch (error) {
+      if (error && error.code !== "ESRCH") {
+        throw error;
+      }
+    }
+  };
+
+  const forwardShutdown = (signal) => {
+    if (shuttingDown) {
+      return;
+    }
+
+    shuttingDown = true;
+
+    if (child.exitCode === null && !child.killed) {
+      if (process.platform === "win32") {
+        child.kill(signal);
+      } else {
+        safeKill(-child.pid, signal);
+      }
+    }
+
+    setTimeout(() => {
+      if (child.exitCode === null && !child.killed) {
+        if (process.platform === "win32") {
+          child.kill("SIGKILL");
+        } else {
+          safeKill(-child.pid, "SIGKILL");
+        }
+      }
+    }, 3000).unref();
+  };
+
+  process.on("SIGINT", () => {
+    forwardShutdown("SIGINT");
+  });
+
+  process.on("SIGTERM", () => {
+    forwardShutdown("SIGTERM");
+  });
 
   let startupBannerPrinted = false;
 
@@ -107,7 +153,15 @@ async function main() {
 
   child.on("exit", (code, signal) => {
     if (signal) {
-      process.kill(process.pid, signal);
+      if (signal === "SIGINT") {
+        process.exit(130);
+      }
+
+      if (signal === "SIGTERM") {
+        process.exit(143);
+      }
+
+      process.exit(1);
       return;
     }
 
