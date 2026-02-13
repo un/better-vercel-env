@@ -435,7 +435,7 @@
         "Custom environments are included",
         "Output has stable ids/slugs"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 36,
