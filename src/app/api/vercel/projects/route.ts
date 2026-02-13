@@ -4,22 +4,8 @@ import {
   VercelCliError,
   getVercelCliAuthStatus,
   listVercelProjects,
-  listVercelTeamScopes,
+  resolveCliScopeFromScopeId,
 } from "@/lib/vercel-cli";
-
-async function resolveScopeForCli(scopeId: string): Promise<string> {
-  if (scopeId.startsWith("user:")) {
-    return scopeId.replace("user:", "");
-  }
-
-  if (scopeId.startsWith("team:")) {
-    return scopeId.replace("team:", "");
-  }
-
-  const teams = await listVercelTeamScopes();
-  const team = teams.find((item) => item.id === scopeId);
-  return team ? team.slug : scopeId;
-}
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const scopeId = request.nextUrl.searchParams.get("scopeId")?.trim() ?? "";
@@ -53,8 +39,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    const scope = await resolveScopeForCli(scopeId);
-    const projects = await listVercelProjects(scope, search);
+    const resolvedScope = await resolveCliScopeFromScopeId(scopeId);
+    const projects = await listVercelProjects(resolvedScope.scopeArg, search);
 
     return NextResponse.json({
       ok: true,

@@ -11,7 +11,7 @@ export interface CliApplyActionResult {
 
 interface ExecuteCliAddActionsInput {
   workspacePath: string;
-  scope: string;
+  scope: string | null;
   actions: CliApplyAction[];
 }
 
@@ -44,35 +44,41 @@ export async function executeCliAddActions(
 
     try {
       if (action.actionKind === "add") {
+        const args = [
+          "env",
+          "add",
+          action.key,
+          action.environment,
+          "--force",
+          "--no-color",
+        ];
+        if (input.scope) {
+          args.push("--scope", input.scope);
+        }
+
         await runner.run({
           executable: "vercel",
-          args: [
-            "env",
-            "add",
-            action.key,
-            action.environment,
-            "--scope",
-            input.scope,
-            "--force",
-            "--no-color",
-          ],
+          args,
           cwd: input.workspacePath,
           timeoutMs: 30_000,
           stdinText: `${action.value ?? ""}\n`,
         });
       } else {
+        const args = [
+          "env",
+          "rm",
+          action.key,
+          action.environment,
+          "-y",
+          "--no-color",
+        ];
+        if (input.scope) {
+          args.push("--scope", input.scope);
+        }
+
         await runner.run({
           executable: "vercel",
-          args: [
-            "env",
-            "rm",
-            action.key,
-            action.environment,
-            "--scope",
-            input.scope,
-            "-y",
-            "--no-color",
-          ],
+          args,
           cwd: input.workspacePath,
           timeoutMs: 30_000,
         });

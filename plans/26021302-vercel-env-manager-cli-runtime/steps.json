@@ -447,7 +447,7 @@
         "Manual smoke path works",
         "Known encrypted-read issue is resolved"
       ],
-      "completed": false
+      "completed": true
     }
   ]
 }

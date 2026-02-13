@@ -7,9 +7,9 @@ import {
   buildSnapshotFromPulledEnvs,
   ensureProjectWorkspace,
   linkVercelProjectWorkspace,
-  listVercelTeamScopes,
   parseDotenvFile,
   pullAllBuiltInEnvironments,
+  resolveCliScopeFromScopeId,
   withWorkspaceLock,
 } from "./index";
 
@@ -18,35 +18,21 @@ interface LoadSnapshotInput {
   scopeId: string;
 }
 
-async function resolveScopeForCli(scopeId: string): Promise<string> {
-  if (scopeId.startsWith("user:")) {
-    return scopeId.replace("user:", "");
-  }
-
-  if (scopeId.startsWith("team:")) {
-    return scopeId.replace("team:", "");
-  }
-
-  const teams = await listVercelTeamScopes();
-  const team = teams.find((item) => item.id === scopeId);
-  return team ? team.slug : scopeId;
-}
-
 export async function loadProjectSnapshotFromCli(input: LoadSnapshotInput): Promise<ProjectEnvSnapshot> {
-  const scope = await resolveScopeForCli(input.scopeId);
+  const resolvedScope = await resolveCliScopeFromScopeId(input.scopeId);
   const workspacePath = await ensureProjectWorkspace({
     projectId: input.projectId,
-    scope,
+    scopeKey: resolvedScope.scopeCacheKey,
   });
 
   const snapshotBase = await withWorkspaceLock(workspacePath, async () => {
     await linkVercelProjectWorkspace({
       workspacePath,
       project: input.projectId,
-      scope,
+      scope: resolvedScope.scopeArg,
     });
 
-    const pulledFiles = await pullAllBuiltInEnvironments(workspacePath, scope);
+    const pulledFiles = await pullAllBuiltInEnvironments(workspacePath, resolvedScope.scopeArg);
 
     try {
       const pulledByEnvironment = pulledFiles.reduce<Record<string, string>>((result, item) => {

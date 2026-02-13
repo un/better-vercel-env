@@ -13,7 +13,7 @@ export const BUILT_IN_ENVIRONMENTS: BuiltInEnvironmentId[] = [
 
 interface EnvPullInput {
   workspacePath: string;
-  scope: string;
+  scope: string | null;
   environment: BuiltInEnvironmentId;
 }
 
@@ -32,19 +32,22 @@ export async function pullVercelEnvToFile(
 ): Promise<PulledEnvFile> {
   const filePath = pulledFilePath(input.workspacePath, input.environment);
 
+  const args = [
+    "env",
+    "pull",
+    filePath,
+    "--environment",
+    input.environment,
+    "--yes",
+    "--no-color",
+  ];
+  if (input.scope) {
+    args.push("--scope", input.scope);
+  }
+
   await runner.run({
     executable: "vercel",
-    args: [
-      "env",
-      "pull",
-      filePath,
-      "--environment",
-      input.environment,
-      "--scope",
-      input.scope,
-      "--yes",
-      "--no-color",
-    ],
+    args,
     cwd: input.workspacePath,
     timeoutMs: 30_000,
   });
@@ -59,7 +62,7 @@ export async function pullVercelEnvToFile(
 
 export async function pullAllBuiltInEnvironments(
   workspacePath: string,
-  scope: string,
+  scope: string | null,
   runner: VercelCliCommandRunner = defaultVercelCliRunner,
 ): Promise<PulledEnvFile[]> {
   const pulled: PulledEnvFile[] = [];

@@ -47,13 +47,18 @@ export function normalizeProjects(rawProjects: RawProjectLike[], search: string)
 }
 
 export async function listVercelProjects(
-  scope: string,
+  scope: string | null,
   search = "",
   runner: VercelCliCommandRunner = defaultVercelCliRunner,
 ): Promise<VercelProjectSummary[]> {
+  const args = ["project", "list", "--json", "--no-color"];
+  if (scope) {
+    args.push("--scope", scope);
+  }
+
   const result = await runner.run({
     executable: "vercel",
-    args: ["project", "list", "--scope", scope, "--json", "--no-color"],
+    args,
     timeoutMs: 20_000,
   });
 

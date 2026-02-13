@@ -11,20 +11,20 @@ const workspaceLocks = new Map<string, Promise<void>>();
 
 interface WorkspaceInput {
   projectId: string;
-  scope: string;
+  scopeKey: string;
 }
 
 function sanitizeForPath(value: string): string {
   return value.replace(/[^a-zA-Z0-9_-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 48);
 }
 
-function workspaceFolderName(projectId: string, scope: string): string {
-  const digest = createHash("sha1").update(`${scope}::${projectId}`).digest("hex").slice(0, 10);
-  return `${sanitizeForPath(scope)}-${sanitizeForPath(projectId)}-${digest}`;
+function workspaceFolderName(projectId: string, scopeKey: string): string {
+  const digest = createHash("sha1").update(`${scopeKey}::${projectId}`).digest("hex").slice(0, 10);
+  return `${sanitizeForPath(scopeKey)}-${sanitizeForPath(projectId)}-${digest}`;
 }
 
 export function getWorkspacePath(input: WorkspaceInput): string {
-  return join(WORKSPACE_ROOT, workspaceFolderName(input.projectId, input.scope));
+  return join(WORKSPACE_ROOT, workspaceFolderName(input.projectId, input.scopeKey));
 }
 
 async function cleanupExpiredWorkspaces(now: number): Promise<void> {

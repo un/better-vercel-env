@@ -10,8 +10,8 @@ import {
   executeCliAddActions,
   getVercelCliAuthStatus,
   linkVercelProjectWorkspace,
-  listVercelTeamScopes,
   loadProjectSnapshotFromCli,
+  resolveCliScopeFromScopeId,
   withProjectApplyLock,
 } from "@/lib/vercel-cli";
 
@@ -48,20 +48,6 @@ const applyPayloadSchema = z
     operations: z.array(operationSchema),
   })
   .strict();
-
-async function resolveScopeForCli(scopeId: string): Promise<string> {
-  if (scopeId.startsWith("user:")) {
-    return scopeId.replace("user:", "");
-  }
-
-  if (scopeId.startsWith("team:")) {
-    return scopeId.replace("team:", "");
-  }
-
-  const teams = await listVercelTeamScopes();
-  const team = teams.find((item) => item.id === scopeId);
-  return team ? team.slug : scopeId;
-}
 
 function mergeActionResults(operationIds: string[], actionResults: Awaited<ReturnType<typeof executeCliAddActions>>): ApplyResultData {
   const results: ApplyOperationResult[] = operationIds.map((operationId) => {
@@ -160,23 +146,23 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         );
       }
 
-      const scope = await resolveScopeForCli(parsed.data.scopeId);
+      const resolvedScope = await resolveCliScopeFromScopeId(parsed.data.scopeId);
       const workspacePath = await ensureProjectWorkspace({
         projectId: parsed.data.projectId,
-        scope,
+        scopeKey: resolvedScope.scopeCacheKey,
       });
 
       await linkVercelProjectWorkspace({
         workspacePath,
         project: parsed.data.projectId,
-        scope,
+        scope: resolvedScope.scopeArg,
       });
 
       const actions = buildCliApplyActions(parsed.data.operations as EnvOperation[]);
       const actionResults = await executeCliAddActions(
         {
           workspacePath,
-          scope,
+          scope: resolvedScope.scopeArg,
           actions,
         },
       );
