@@ -1,5 +1,11 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Core Runtime Dependencies
+
+- `@vercel/sdk`: Vercel API client used by local route handlers.
+- `zod`: schema validation for API payloads and response normalization.
+- `zustand`: lightweight client state store for matrix draft editing.
+
 ## Getting Started
 
 First, run the development server:

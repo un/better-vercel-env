@@ -51,7 +51,7 @@
         "No unnecessary libraries added",
         "Lockfile updates cleanly"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 4,
