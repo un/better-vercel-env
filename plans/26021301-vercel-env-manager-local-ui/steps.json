@@ -303,7 +303,7 @@
         "Session no longer authenticates",
         "Route returns success response"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 25,

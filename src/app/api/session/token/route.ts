@@ -1,7 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 
-import { createSessionId, getSessionIdFromRequest, setSessionCookie } from "@/lib/session/session-cookie";
+import {
+  clearSessionCookie,
+  createSessionId,
+  getSessionIdFromRequest,
+  setSessionCookie,
+} from "@/lib/session/session-cookie";
 import { sessionTokenStore } from "@/lib/session/token-session-store";
 
 const tokenSchema = z.object({
@@ -38,6 +43,25 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   });
 
   setSessionCookie(response, sessionId);
+
+  return response;
+}
+
+export async function DELETE(request: NextRequest): Promise<NextResponse> {
+  const sessionId = getSessionIdFromRequest(request);
+
+  if (sessionId) {
+    sessionTokenStore.clearSession(sessionId);
+  }
+
+  const response = NextResponse.json({
+    ok: true,
+    data: {
+      authenticated: false,
+    },
+  });
+
+  clearSessionCookie(response);
 
   return response;
 }
