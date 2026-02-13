@@ -63,7 +63,7 @@
         "typecheck script exists and runs",
         "verify script combines core checks"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 5,
