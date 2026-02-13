@@ -1,74 +1,121 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { useEffect, useState } from "react";
+import { AlertCircle, Loader2, RefreshCw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 
-interface ApiErrorPayload {
-  error?: {
+interface CliAuthStatusPayload {
+  data?: {
+    authenticated?: boolean;
+    username?: string | null;
+    activeScope?: string | null;
     message?: string;
   };
 }
 
 export function TokenOnboardingForm() {
   const router = useRouter();
-  const [token, setToken] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [authenticated, setAuthenticated] = useState(false);
+  const [username, setUsername] = useState<string | null>(null);
+  const [activeScope, setActiveScope] = useState<string | null>(null);
+  const [statusMessage, setStatusMessage] = useState<string>("Checking CLI session...");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    setIsSubmitting(true);
-    setErrorMessage(null);
-    setSuccessMessage(null);
-
-    const response = await fetch("/api/session/token", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ token }),
-    });
-
-    if (!response.ok) {
-      const payload = (await response.json().catch(() => null)) as ApiErrorPayload | null;
-      setErrorMessage(payload?.error?.message ?? "Unable to verify token. Please try again.");
-      setIsSubmitting(false);
-      return;
+  const loadStatus = async (isManualRefresh = false) => {
+    if (isManualRefresh) {
+      setIsRefreshing(true);
+    } else {
+      setIsLoading(true);
     }
 
-    setSuccessMessage("Token validated. Loading your projects...");
-    setIsSubmitting(false);
-    router.push("/projects");
+    try {
+      setErrorMessage(null);
+      const response = await fetch("/api/vercel/auth-status");
+      const payload = (await response.json().catch(() => null)) as CliAuthStatusPayload | null;
+
+      if (!response.ok) {
+        setAuthenticated(false);
+        setStatusMessage("Could not read CLI auth status.");
+        setErrorMessage("Unable to read CLI status. Run `vercel login` and retry.");
+        return;
+      }
+
+      const nextAuthenticated = payload?.data?.authenticated === true;
+      setAuthenticated(nextAuthenticated);
+      setUsername(payload?.data?.username ?? null);
+      setActiveScope(payload?.data?.activeScope ?? null);
+      setStatusMessage(payload?.data?.message ?? "CLI auth status loaded.");
+    } catch {
+      setAuthenticated(false);
+      setStatusMessage("Could not read CLI auth status.");
+      setErrorMessage("Network error while checking CLI auth status.");
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
   };
 
-  return (
-    <form className="space-y-4" onSubmit={handleSubmit}>
-      <div className="space-y-2">
-        <label className="text-sm font-medium" htmlFor="vercel-token-input">
-          Vercel personal token
-        </label>
-        <Input
-          id="vercel-token-input"
-          name="token"
-          type="password"
-          autoComplete="off"
-          value={token}
-          onChange={(event) => setToken(event.target.value)}
-          placeholder="Paste your token"
-          required
-          minLength={20}
-        />
+  useEffect(() => {
+    void loadStatus();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+        Checking Vercel CLI session...
       </div>
-      {errorMessage ? <p className="text-sm text-destructive">{errorMessage}</p> : null}
-      {successMessage ? <p className="text-sm text-emerald-700">{successMessage}</p> : null}
-      <Button type="submit" disabled={isSubmitting || token.trim().length < 20}>
-        {isSubmitting ? "Validating..." : "Continue"}
-      </Button>
-    </form>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-xl border border-border/70 bg-muted/20 p-3 text-sm">
+        <p className="font-medium text-foreground">Status: {authenticated ? "Authenticated" : "Not authenticated"}</p>
+        <p className="mt-1 text-muted-foreground">{statusMessage}</p>
+        {username ? <p className="mt-2 text-xs text-muted-foreground">User: {username}</p> : null}
+        {activeScope ? <p className="text-xs text-muted-foreground">Active scope: {activeScope}</p> : null}
+      </div>
+
+      {errorMessage ? (
+        <p className="flex items-center gap-2 text-sm text-destructive" role="status" aria-live="polite">
+          <AlertCircle className="size-4" aria-hidden="true" />
+          {errorMessage}
+        </p>
+      ) : null}
+
+      {!authenticated ? (
+        <div className="space-y-2 rounded-xl border border-border/70 bg-background p-3 text-sm text-muted-foreground">
+          <p>Run these commands in your terminal:</p>
+          <p className="rounded-md border border-border bg-muted p-2 font-mono text-xs">vercel login</p>
+          <p className="rounded-md border border-border bg-muted p-2 font-mono text-xs">vercel switch</p>
+        </div>
+      ) : null}
+
+      <div className="flex flex-wrap gap-2">
+        <Button type="button" variant="outline" onClick={() => void loadStatus(true)} disabled={isRefreshing}>
+          {isRefreshing ? (
+            <span className="inline-flex items-center gap-2">
+              <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+              Refreshing...
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-2">
+              <RefreshCw className="size-4" aria-hidden="true" />
+              Refresh status
+            </span>
+          )}
+        </Button>
+        <Button type="button" onClick={() => router.push("/projects")} disabled={!authenticated}>
+          <span className="inline-flex items-center gap-2">
+            Continue to projects
+          </span>
+        </Button>
+      </div>
+    </div>
   );
 }

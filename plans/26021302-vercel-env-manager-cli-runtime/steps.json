@@ -99,7 +99,7 @@
         "CLI status is visible",
         "Onboarding guidance is clear"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 8,
