@@ -176,7 +176,7 @@ export function ProjectsBrowser() {
           {projects.map((project) => (
             <Link
               key={project.id}
-              href={`/projects/${project.id}/env`}
+              href={`/projects/${project.id}/env?scopeId=${encodeURIComponent(activeScopeId ?? "")}`}
               className="flex items-center justify-between rounded-md border border-border px-3 py-2 hover:bg-accent"
             >
               <span className="font-medium">{project.name}</span>
