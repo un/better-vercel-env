@@ -8,6 +8,7 @@ import {
   setSessionCookie,
 } from "@/lib/session/session-cookie";
 import { sessionTokenStore } from "@/lib/session/token-session-store";
+import { validateVercelToken } from "@/lib/vercel/validate-token";
 
 const tokenSchema = z.object({
   token: z.string().trim().min(20).max(256),
@@ -27,6 +28,21 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         },
       },
       { status: 400 },
+    );
+  }
+
+  const validationResult = await validateVercelToken(parsed.data.token);
+
+  if (!validationResult.ok) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: {
+          code: validationResult.status === 500 ? "internal_error" : "unauthorized",
+          message: validationResult.message,
+        },
+      },
+      { status: validationResult.status },
     );
   }
 

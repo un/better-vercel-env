@@ -2,6 +2,11 @@
 
 Use this file as a prepend-only log.
 
+## 2026-02-13 12:31 - Step 25 - sdk error typing nuance
+- Context: Adding token validity checks with @vercel/sdk before session auth succeeds.
+- Learning: `@vercel/sdk` does not export `VercelError` at the package root in this setup.
+- Impact: Use safe shape-based status inspection in catch blocks unless importing model-specific error types via supported subpaths.
+
 ## 2026-02-13 12:27 - Step 20 - process check false positives
 - Context: Validating that SIGINT/SIGTERM cleanup leaves no Next child process running.
 - Learning: `ps | rg "pattern"` can self-match the `rg` command, creating false zombie-process results.

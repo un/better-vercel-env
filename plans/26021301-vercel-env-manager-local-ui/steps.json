@@ -315,7 +315,7 @@
         "Invalid token yields clear message",
         "No token leaks in logs"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 26,
