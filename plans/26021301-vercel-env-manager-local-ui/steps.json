@@ -243,7 +243,7 @@
         "User sees clear remediation",
         "App still starts or exits cleanly"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 20,
