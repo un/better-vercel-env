@@ -699,7 +699,7 @@
         "Targets are accurate",
         "No duplicate create ops"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 58,
