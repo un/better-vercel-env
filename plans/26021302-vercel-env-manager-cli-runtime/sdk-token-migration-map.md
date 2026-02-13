@@ -39,3 +39,9 @@
 - Replace SDK call sites with CLI adapter functions under `src/lib/vercel-cli/`.
 - Replace token session onboarding with CLI auth status checks (`vercel whoami`) and CLI-first guidance (`vercel login`, `vercel switch`).
 - Remove token cookie dependencies from routes and layouts.
+
+## Migration status
+
+- SDK/runtime call sites moved to `src/lib/vercel-cli/*` and API routes now use CLI adapters.
+- Token onboarding/session cookie flow removed; onboarding uses `/api/vercel/auth-status`.
+- Legacy route `src/app/api/vercel/env-records/route.ts` kept only as compatibility response and no longer reads SDK/session state.

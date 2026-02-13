@@ -1,10 +1,16 @@
-import type { Vercel } from "@vercel/sdk";
-
 import type { EnvOperation } from "@/lib/env-model";
 import type { ApplyOperationResult, ApplyResultData } from "@/lib/types";
 
+interface LegacyVercelLikeClient {
+  projects: {
+    createProjectEnv(input: unknown): Promise<unknown>;
+    editProjectEnv(input: unknown): Promise<unknown>;
+    removeProjectEnv(input: unknown): Promise<unknown>;
+  };
+}
+
 export interface ApplyOperationsInput {
-  client: Vercel;
+  client: LegacyVercelLikeClient;
   projectId: string;
   teamId?: string;
   operations: EnvOperation[];

@@ -363,7 +363,7 @@
         "Build succeeds without SDK paths",
         "Migration map is fully closed"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 30,
