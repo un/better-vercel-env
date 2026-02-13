@@ -387,7 +387,7 @@
         "Reserved keys are filtered",
         "Assignments are correct"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 32,
