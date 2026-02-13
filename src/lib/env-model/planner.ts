@@ -262,5 +262,17 @@ export function planOperations(baseline: EnvMatrixDraft, draft: EnvMatrixDraft):
     },
   );
 
-  return { operations: Array.from(operationsById.values()) };
+  const operationOrder: Record<OperationKind, number> = {
+    create_env: 0,
+    update_env: 1,
+    rename_key: 1,
+    retarget: 1,
+    delete_env: 2,
+  };
+
+  const orderedOperations = Array.from(operationsById.values()).sort((left, right) => {
+    return operationOrder[left.kind] - operationOrder[right.kind] || left.id.localeCompare(right.id);
+  });
+
+  return { operations: orderedOperations };
 }

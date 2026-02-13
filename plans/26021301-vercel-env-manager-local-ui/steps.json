@@ -735,7 +735,7 @@
         "Planner output is stable across runs",
         "Execution order matches safety strategy"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 61,
