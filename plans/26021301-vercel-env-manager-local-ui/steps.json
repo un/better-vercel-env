@@ -651,7 +651,7 @@
         "Horizontal scroll is smooth",
         "No z-index clipping issues"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 54,

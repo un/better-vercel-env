@@ -30,7 +30,7 @@ export function EnvMatrixTableShell() {
       <table className="min-w-full border-collapse text-sm">
         <thead>
           <tr className="border-b border-border bg-muted/40">
-            <th className="px-3 py-2 text-left font-medium">Key</th>
+            <th className="sticky left-0 z-20 bg-muted/40 px-3 py-2 text-left font-medium">Key</th>
             <th className="px-3 py-2 text-left font-medium">Values</th>
             {environments.map((environment) => (
               <th key={environment.id} className="px-3 py-2 text-left font-medium">
@@ -53,7 +53,9 @@ export function EnvMatrixTableShell() {
 
             return (
               <tr key={row.rowId} className="border-b border-border last:border-0">
-                <td className={`px-3 py-2 align-top ${keyChanged ? "status-update" : ""}`}>
+                <td
+                  className={`sticky left-0 z-10 px-3 py-2 align-top ${keyChanged ? "status-update" : "bg-card"}`}
+                >
                   <input
                     className={`w-full rounded-md border px-2 py-1 text-sm ${
                       !row.key.trim() || (keyCounts.get(row.key.trim().toLowerCase()) ?? 0) > 1
