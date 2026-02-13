@@ -615,7 +615,7 @@
         "Values are editable inline",
         "Add value action is usable"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 51,
