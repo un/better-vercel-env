@@ -771,7 +771,7 @@
         "No broken references after undo",
         "State remains serializable"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 64,

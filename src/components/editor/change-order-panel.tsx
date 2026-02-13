@@ -33,6 +33,13 @@ export function ChangeOrderPanel() {
     return planOperations(baseline, draft).operations;
   }, [baseline, draft]);
 
+  const operationsPerRow = useMemo(() => {
+    return operations.reduce<Map<string, number>>((result, operation) => {
+      result.set(operation.rowId, (result.get(operation.rowId) ?? 0) + 1);
+      return result;
+    }, new Map());
+  }, [operations]);
+
   if (operations.length === 0) {
     return <p className="text-sm text-muted-foreground">No pending changes.</p>;
   }
@@ -47,10 +54,16 @@ export function ChangeOrderPanel() {
             </span>
           </div>
           <p className="mt-2 text-sm">{operation.summary}</p>
+          {(operationsPerRow.get(operation.rowId) ?? 0) > 1 ? (
+            <p className="mt-1 text-xs text-muted-foreground">
+              Multiple overlapping edits detected for this row. Use row-level undo safely.
+            </p>
+          ) : null}
           <button
             type="button"
             className="mt-2 rounded-md border border-border px-2 py-1 text-xs font-medium hover:bg-accent"
             onClick={() => undoRowChange(operation.rowId)}
+            disabled={(operationsPerRow.get(operation.rowId) ?? 0) > 1}
           >
             Undo
           </button>
