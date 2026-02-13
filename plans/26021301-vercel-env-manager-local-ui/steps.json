@@ -663,7 +663,7 @@
         "No changes shown when draft equals baseline",
         "Detected changes map to planner inputs"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 55,

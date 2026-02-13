@@ -1,10 +1,10 @@
 import { create } from "zustand";
 
-import type { ProjectEnvSnapshot } from "@/lib/types";
+import type { EnvironmentId, ProjectEnvSnapshot } from "@/lib/types";
 
+import { detectDraftChanges } from "./change-detector";
 import { normalizeSnapshotToDraft } from "./normalize";
 import type { EnvMatrixChange, EnvMatrixDraft } from "./types";
-import type { EnvironmentId } from "@/lib/types";
 
 interface EnvDraftState {
   baseline: EnvMatrixDraft | null;
@@ -23,6 +23,13 @@ interface EnvDraftState {
   reset: () => void;
 }
 
+function withComputedChanges(state: EnvDraftState, draft: EnvMatrixDraft): Partial<EnvDraftState> {
+  return {
+    draft,
+    pendingChanges: state.baseline ? detectDraftChanges(state.baseline, draft) : [],
+  };
+}
+
 export const useEnvDraftStore = create<EnvDraftState>((set) => ({
   baseline: null,
   draft: null,
@@ -36,7 +43,10 @@ export const useEnvDraftStore = create<EnvDraftState>((set) => ({
     });
   },
   setDraft: (nextDraft) => {
-    set({ draft: nextDraft });
+    set((state) => ({
+      ...state,
+      ...withComputedChanges(state, nextDraft),
+    }));
   },
   setPendingChanges: (changes) => {
     set({ pendingChanges: changes });
@@ -57,7 +67,7 @@ export const useEnvDraftStore = create<EnvDraftState>((set) => ({
 
       return {
         ...state,
-        draft: {
+        ...withComputedChanges(state, {
           ...state.draft,
           rows: [
             ...state.draft.rows,
@@ -70,7 +80,7 @@ export const useEnvDraftStore = create<EnvDraftState>((set) => ({
               isNew: true,
             },
           ],
-        },
+        }),
       };
     });
   },
@@ -88,10 +98,10 @@ export const useEnvDraftStore = create<EnvDraftState>((set) => ({
 
       return {
         ...state,
-        draft: {
+        ...withComputedChanges(state, {
           ...state.draft,
           rows: state.draft.rows.filter((item) => item.rowId !== rowId),
-        },
+        }),
       };
     });
   },
@@ -103,7 +113,7 @@ export const useEnvDraftStore = create<EnvDraftState>((set) => ({
 
       return {
         ...state,
-        draft: {
+        ...withComputedChanges(state, {
           ...state.draft,
           rows: state.draft.rows.map((row) =>
             row.rowId === rowId
@@ -113,7 +123,7 @@ export const useEnvDraftStore = create<EnvDraftState>((set) => ({
                 }
               : row,
           ),
-        },
+        }),
       };
     });
   },
@@ -125,7 +135,7 @@ export const useEnvDraftStore = create<EnvDraftState>((set) => ({
 
       return {
         ...state,
-        draft: {
+        ...withComputedChanges(state, {
           ...state.draft,
           rows: state.draft.rows.map((row) => {
             if (row.rowId !== rowId) {
@@ -148,7 +158,7 @@ export const useEnvDraftStore = create<EnvDraftState>((set) => ({
               ],
             };
           }),
-        },
+        }),
       };
     });
   },
@@ -160,7 +170,7 @@ export const useEnvDraftStore = create<EnvDraftState>((set) => ({
 
       return {
         ...state,
-        draft: {
+        ...withComputedChanges(state, {
           ...state.draft,
           rows: state.draft.rows.map((row) => {
             if (row.rowId !== rowId) {
@@ -179,7 +189,7 @@ export const useEnvDraftStore = create<EnvDraftState>((set) => ({
               ),
             };
           }),
-        },
+        }),
       };
     });
   },
@@ -191,7 +201,7 @@ export const useEnvDraftStore = create<EnvDraftState>((set) => ({
 
       return {
         ...state,
-        draft: {
+        ...withComputedChanges(state, {
           ...state.draft,
           rows: state.draft.rows.map((row) => {
             if (row.rowId !== rowId) {
@@ -208,7 +218,7 @@ export const useEnvDraftStore = create<EnvDraftState>((set) => ({
               values: row.values.filter((value) => value.id !== valueId),
             };
           }),
-        },
+        }),
       };
     });
   },
@@ -220,7 +230,7 @@ export const useEnvDraftStore = create<EnvDraftState>((set) => ({
 
       return {
         ...state,
-        draft: {
+        ...withComputedChanges(state, {
           ...state.draft,
           rows: state.draft.rows.map((row) => {
             if (row.rowId !== rowId) {
@@ -239,7 +249,7 @@ export const useEnvDraftStore = create<EnvDraftState>((set) => ({
               },
             };
           }),
-        },
+        }),
       };
     });
   },
