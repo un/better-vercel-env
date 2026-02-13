@@ -711,7 +711,7 @@
         "Only changed records are updated",
         "No unnecessary updates are emitted"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 59,
