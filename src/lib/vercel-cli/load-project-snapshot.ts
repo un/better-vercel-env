@@ -1,6 +1,6 @@
 import { promises as fs } from "node:fs";
 
-import { hashProjectSnapshot } from "@/lib/vercel/project-snapshot";
+import { hashProjectSnapshot } from "../vercel/project-snapshot";
 import type { ProjectEnvSnapshot } from "@/lib/types";
 
 import {
