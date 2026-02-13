@@ -207,7 +207,7 @@
         "Escaped newlines parse correctly",
         "Empty values are handled"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 17,
