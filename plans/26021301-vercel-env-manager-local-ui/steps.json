@@ -783,7 +783,7 @@
         "Phrase validation is exact",
         "Apply remains blocked until valid"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 65,
@@ -795,7 +795,7 @@
         "Counts match planned operations",
         "User can assess impact quickly"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 66,
@@ -807,7 +807,7 @@
         "Invalid payloads are rejected",
         "Valid payload reaches executor"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 67,
@@ -819,7 +819,7 @@
         "Writes are blocked on drift",
         "Response explains next action"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 68,
@@ -831,7 +831,7 @@
         "Failures are captured per item",
         "Result includes created ids"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 69,
@@ -843,7 +843,7 @@
         "Changed data is reflected in API",
         "Per-item status is recorded"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 70,
@@ -855,7 +855,7 @@
         "Only planned ids are deleted",
         "Delete statuses are reported"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 71,
@@ -867,7 +867,7 @@
         "Each operation returns status",
         "Error messages are sanitized"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 72,
@@ -879,7 +879,7 @@
         "Controls disable appropriately",
         "No duplicate apply requests"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 73,
@@ -891,7 +891,7 @@
         "User can inspect failures",
         "Report is readable on mobile"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 74,
@@ -903,7 +903,7 @@
         "Pending changes clear",
         "Table reflects latest values"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 75,
@@ -915,7 +915,7 @@
         "User can retry after correction",
         "No silent state loss"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 76,
@@ -927,7 +927,7 @@
         "Dialog can be fully operated by keyboard",
         "Focus states are visible"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 77,
@@ -939,7 +939,7 @@
         "Change list remains functional",
         "Layout does not overflow"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 78,
@@ -951,7 +951,7 @@
         "Assignments are validated",
         "Tests pass reliably"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 79,
@@ -963,7 +963,7 @@
         "Single-field edit yields minimal ops",
         "Mixed case matches expected count"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 80,
@@ -975,7 +975,7 @@
         "Change list updates correctly",
         "No dangling references remain"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 81,
@@ -987,7 +987,7 @@
         "Partial failures are reported",
         "Sanitized errors are returned"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 82,
@@ -999,7 +999,7 @@
         "Exact phrase enables apply",
         "Tests pass consistently"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 83,
@@ -1011,7 +1011,7 @@
         "README includes token generation link",
         "README mentions localhost:6969"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 84,
@@ -1023,7 +1023,7 @@
         "Security behavior is described",
         "Read-only behavior is documented"
       ],
-      "completed": false
+      "completed": true
     }
   ]
 }

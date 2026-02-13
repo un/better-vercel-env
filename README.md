@@ -1,42 +1,55 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Vercel Better Env
 
-## Core Runtime Dependencies
+Local-first environment variable editor for Vercel projects.
 
-- `@vercel/sdk`: Vercel API client used by local route handlers.
-- `zod`: schema validation for API payloads and response normalization.
-- `zustand`: lightweight client state store for matrix draft editing.
+## Token setup (required)
 
-## Getting Started
+Create a Vercel token first:
 
-First, run the development server:
+- https://vercel.com/account/settings/tokens
+
+Then launch the app and paste your token into onboarding.
+
+## Quickstart
+
+### Run with npx
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npx vercel-better-env
 ```
 
-Open [http://127.0.0.1:6969](http://127.0.0.1:6969) with your browser to see the result.
+The local app starts at `http://127.0.0.1:6969` (or the next available local port if 6969 is occupied).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Run from source
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm install
+npm run dev
+```
 
-## Learn More
+### Validate locally
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run verify
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## What it does
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Uses a key-first matrix editor for environment values and targets.
+- Plans create/update/delete operations before apply.
+- Requires an exact confirmation phrase before apply.
+- Re-validates the baseline hash before writes to detect drift.
+- Stores auth token in server memory only for the active local session.
 
-## Deploy on Vercel
+## Limitations (v1)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Session-only auth: token is kept in memory and tied to an HTTP-only session cookie.
+- No persistence: token is not written to `.env` files, disk, or long-lived local storage.
+- System environment variables are read-only.
+- Git branch-specific environment variables are read-only.
+- Apply execution currently supports `create_env`, `update_env`, and `delete_env`; other operation kinds are reported as skipped.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Development notes
+
+- Stack: Next.js App Router, TypeScript, Tailwind, shadcn/ui, Zustand, Zod, `@vercel/sdk`.
+- Default host/port: `127.0.0.1:6969`.

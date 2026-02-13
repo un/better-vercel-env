@@ -2,6 +2,16 @@
 
 Use this file as a prepend-only log.
 
+## 2026-02-13 13:30 - Step 79 - planner minimality overlap
+- Context: Adding planner minimality tests for create/update/delete scenarios.
+- Learning: Deriving operations from both semantic change events and combo-level diffing can double-count a single logical edit.
+- Impact: Keep planner output sourced from executable create/update/delete planning to preserve minimal plans and avoid redundant operations.
+
+## 2026-02-13 13:16 - Step 68 - create env response shape varies
+- Context: Implementing apply executors for create/update/delete operations via @vercel/sdk.
+- Learning: `projects.createProjectEnv` response shape can vary (single object, nested `created`, or `envs[]`), so created id extraction needs runtime guards.
+- Impact: Keep executor result handling defensive and avoid assuming a single response schema when reporting created IDs.
+
 ## 2026-02-13 12:38 - Step 31 - projects response polymorphism
 - Context: Building paginated project listing through @vercel/sdk.
 - Learning: `projects.getProjects` typings can resolve to multiple response shapes, so code should normalize both array and object-with-pagination forms.
