@@ -1,0 +1,25 @@
+# Learnings Log - 26021301 vercel-env-manager-local-ui
+
+Use this file as a prepend-only log.
+
+## 2026-02-13 12:06 - Step 1 - scaffold in non-empty repo
+- Context: Bootstrapping Next.js in a repository that already contained planning files.
+- Learning: `create-next-app` refuses to initialize directly in non-empty directories, so scaffold in a temporary folder and copy project files into root.
+- Impact: If regeneration is needed later, avoid running scaffold commands directly in root unless it is empty.
+
+## Operating protocol for sub-agents
+- Before starting any step, read this file completely.
+- After finishing a step, prepend any new learnings at the top using the template below.
+- Only add a learning when it changes how future steps should be executed.
+- Keep entries short, concrete, and actionable.
+
+## Entry template
+```
+## YYYY-MM-DD HH:MM - Step <serial> - <short title>
+- Context: <what was being done>
+- Learning: <what was discovered>
+- Impact: <what future steps should do differently>
+```
+
+## Current learnings
+- None yet.

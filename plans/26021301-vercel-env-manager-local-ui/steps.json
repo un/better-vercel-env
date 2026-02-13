@@ -1,0 +1,1029 @@
+{
+  "planId": "26021301",
+  "planSlug": "vercel-env-manager-local-ui",
+  "planFile": "plans/26021301-vercel-env-manager-local-ui.md",
+  "title": "Vercel Better Env Implementation Steps",
+  "createdAt": "2026-02-13",
+  "executionProtocol": {
+    "beforeEachStep": [
+      "Read plans/26021301-vercel-env-manager-local-ui/learnings.md before starting.",
+      "Confirm any relevant prior learning is applied in this step.",
+      "Keep the step scoped; do not include opportunistic unrelated refactors."
+    ],
+    "afterEachStep": [
+      "If new learning exists, prepend it to plans/26021301-vercel-env-manager-local-ui/learnings.md.",
+      "Record what changed and why it mattered.",
+      "Only mark completed=true when success factors are met."
+    ]
+  },
+  "steps": [
+    {
+      "serial": 1,
+      "name": "Create project scaffold",
+      "description": "Initialize a Next.js TypeScript application in the repository root with the App Router enabled.",
+      "guidance": "Use the official create-next-app defaults, then remove demo boilerplate pages/content not needed for this product.",
+      "successFactors": [
+        "Next.js app files exist and run",
+        "TypeScript is configured",
+        "No demo boilerplate remains in main UI"
+      ],
+      "completed": true
+    },
+    {
+      "serial": 2,
+      "name": "Set strict TypeScript",
+      "description": "Confirm strict TypeScript compiler options are enabled for safer refactors and planner logic.",
+      "guidance": "Update tsconfig with strict mode and avoid disabling checks to fix immediate errors.",
+      "successFactors": [
+        "strict mode is enabled",
+        "No broad ignore flags added",
+        "App compiles with ts checks"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 3,
+      "name": "Install core dependencies",
+      "description": "Add runtime dependencies needed for product goals: @vercel/sdk, zod, and a small state helper if required.",
+      "guidance": "Prefer minimal dependency count and document why each package is included.",
+      "successFactors": [
+        "Required packages are installed",
+        "No unnecessary libraries added",
+        "Lockfile updates cleanly"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 4,
+      "name": "Configure lint scripts",
+      "description": "Set up lint and typecheck scripts to validate work at every milestone.",
+      "guidance": "Use scripts such as lint, typecheck, and verify (aggregate) in package.json.",
+      "successFactors": [
+        "lint script exists and runs",
+        "typecheck script exists and runs",
+        "verify script combines core checks"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 5,
+      "name": "Add test runner",
+      "description": "Install and configure a unit test runner for model and diff-planner logic.",
+      "guidance": "Prefer Vitest with a simple config and clear test command.",
+      "successFactors": [
+        "Unit test framework is configured",
+        "test script exists",
+        "A sample test passes"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 6,
+      "name": "Create folder conventions",
+      "description": "Establish project folders for api routes, lib modules, UI components, and domain logic.",
+      "guidance": "Create app/api, components, lib/vercel, lib/env-model, and lib/session with README stubs if needed.",
+      "successFactors": [
+        "Folder layout exists",
+        "Layout matches architecture plan",
+        "Team can place files predictably"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 7,
+      "name": "Set localhost defaults",
+      "description": "Configure app defaults for host 127.0.0.1 and port 6969 in local scripts.",
+      "guidance": "Use npm scripts and environment defaults so users get the desired startup behavior immediately.",
+      "successFactors": [
+        "Default port is 6969",
+        "Host binds to 127.0.0.1",
+        "Startup command is documented"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 8,
+      "name": "Create shared types index",
+      "description": "Add initial shared TypeScript type modules for api responses and domain entities.",
+      "guidance": "Start with narrow, explicit interfaces and evolve them incrementally with tests.",
+      "successFactors": [
+        "Shared type files exist",
+        "No any-based placeholder flood",
+        "Imports are stable"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 9,
+      "name": "Install Tailwind",
+      "description": "Enable Tailwind CSS for utility-first layout and component styling.",
+      "guidance": "Use the standard Next.js Tailwind setup and verify globals load.",
+      "successFactors": [
+        "Tailwind compiles",
+        "Tailwind classes render in app",
+        "No CSS conflicts block layout"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 10,
+      "name": "Install shadcn foundation",
+      "description": "Initialize shadcn/ui configuration and base style tokens.",
+      "guidance": "Use a standard shadcn init and keep generated config committed.",
+      "successFactors": [
+        "shadcn config exists",
+        "Base CSS variables are available",
+        "Generated files compile"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 11,
+      "name": "Add core shadcn components",
+      "description": "Generate initial shadcn components needed early: button, input, dialog, table, select, badge, sheet.",
+      "guidance": "Add only components currently needed by the planned UI flow.",
+      "successFactors": [
+        "Requested components are generated",
+        "Imports resolve correctly",
+        "Component examples render"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 12,
+      "name": "Configure Geist font",
+      "description": "Integrate Vercel font (Geist) in root layout and base typography tokens.",
+      "guidance": "Apply the font through Next.js font loading and ensure fallback stack remains sane.",
+      "successFactors": [
+        "Geist is active in app",
+        "No flash or font import errors",
+        "Typography is consistent"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 13,
+      "name": "Create app shell layout",
+      "description": "Build a reusable app shell with header area, content container, and consistent spacing.",
+      "guidance": "Keep shell simple and neutral so feature pages can compose inside it.",
+      "successFactors": [
+        "Shell component exists",
+        "Pages can mount inside shell",
+        "Responsive spacing works"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 14,
+      "name": "Define color semantics",
+      "description": "Set UI semantic colors for create/update/delete/unchanged states.",
+      "guidance": "Use CSS variables and utility classes; avoid hardcoded random colors.",
+      "successFactors": [
+        "Semantic tokens exist",
+        "Status colors are readable",
+        "Used consistently in components"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 15,
+      "name": "Add responsive baseline",
+      "description": "Establish base breakpoints and utility wrappers for mobile and desktop layouts.",
+      "guidance": "Ensure side panel patterns can switch to drawer on narrow viewports.",
+      "successFactors": [
+        "Core pages render on mobile",
+        "No clipped critical actions",
+        "Desktop layout remains stable"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 16,
+      "name": "Create CLI bin entry",
+      "description": "Add package bin mapping so users can run the tool via npx.",
+      "guidance": "Define a single executable entry in package.json with a clear command name.",
+      "successFactors": [
+        "bin field exists in package.json",
+        "Executable file path is valid",
+        "Command resolves locally"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 17,
+      "name": "Implement CLI starter script",
+      "description": "Create a Node script that launches the local app process.",
+      "guidance": "Use child_process spawn and pass host/port arguments to Next runtime command.",
+      "successFactors": [
+        "Script starts app successfully",
+        "Failure exits with non-zero status",
+        "Script is executable"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 18,
+      "name": "Print startup URLs",
+      "description": "CLI should print local app URL and token generation URL after startup.",
+      "guidance": "Include https://vercel.com/account/settings/tokens in the startup output.",
+      "successFactors": [
+        "App URL is shown",
+        "Token URL is shown",
+        "Output is easy to copy"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 19,
+      "name": "Handle occupied port",
+      "description": "Detect when 6969 is occupied and provide a clear fallback or error message.",
+      "guidance": "Either auto-select the next free port or prompt with deterministic fallback behavior.",
+      "successFactors": [
+        "Port conflict is detected",
+        "User sees clear remediation",
+        "App still starts or exits cleanly"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 20,
+      "name": "Add graceful shutdown",
+      "description": "Ensure SIGINT/SIGTERM from terminal cleanly stops child processes.",
+      "guidance": "Forward signals and avoid orphaned processes.",
+      "successFactors": [
+        "Ctrl+C stops all processes",
+        "No zombie child process remains",
+        "Exit code behavior is consistent"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 21,
+      "name": "Create session module",
+      "description": "Implement a server-side session-only token store abstraction.",
+      "guidance": "Keep token in memory only; no filesystem writes and no env-file persistence.",
+      "successFactors": [
+        "Session interface exists",
+        "Token can be set/get/clear",
+        "No disk persistence path used"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 22,
+      "name": "Add session cookie helper",
+      "description": "Create HTTP-only cookie handling for identifying in-memory sessions.",
+      "guidance": "Use secure defaults for sameSite and path; cookie stores only session id, not token.",
+      "successFactors": [
+        "Cookie helper exists",
+        "Cookie never contains raw token",
+        "Cookie options are secure"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 23,
+      "name": "Build token set endpoint",
+      "description": "Create route to accept pasted token and attach it to current in-memory session.",
+      "guidance": "Validate input shape and length before storing, return user-safe errors.",
+      "successFactors": [
+        "Endpoint accepts valid token",
+        "Invalid token format is rejected",
+        "Token is tied to session id"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 24,
+      "name": "Build token clear endpoint",
+      "description": "Create route to remove session token and invalidate the auth session.",
+      "guidance": "Clear session data and remove cookie state where applicable.",
+      "successFactors": [
+        "Token can be cleared",
+        "Session no longer authenticates",
+        "Route returns success response"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 25,
+      "name": "Add auth validation check",
+      "description": "Implement server call to verify token validity against Vercel before granting access.",
+      "guidance": "Use lightweight endpoint access through SDK and handle 401/403 cleanly.",
+      "successFactors": [
+        "Valid token passes check",
+        "Invalid token yields clear message",
+        "No token leaks in logs"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 26,
+      "name": "Create onboarding page",
+      "description": "Build root page with token input form, validation messaging, and start action.",
+      "guidance": "Focus on clear copy and frictionless first-run flow.",
+      "successFactors": [
+        "Token input form is usable",
+        "Submit connects to API endpoint",
+        "Error and success states are shown"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 27,
+      "name": "Add generate-token CTA",
+      "description": "Add a prominent external link to Vercel token settings page in onboarding UI.",
+      "guidance": "Use target blank behavior and clearly label this as required before continuing.",
+      "successFactors": [
+        "Correct URL is rendered",
+        "CTA is visible above the fold",
+        "Users can continue after token paste"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 28,
+      "name": "Protect authenticated routes",
+      "description": "Guard project and editor routes so they require a valid session token.",
+      "guidance": "Redirect unauthenticated users back to onboarding page.",
+      "successFactors": [
+        "Protected routes reject no-token sessions",
+        "Redirect behavior is consistent",
+        "Authorized sessions pass through"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 29,
+      "name": "Create Vercel client factory",
+      "description": "Implement a shared utility to create an SDK client from the current session token.",
+      "guidance": "Centralize client initialization for consistent auth and error handling.",
+      "successFactors": [
+        "Factory returns working SDK client",
+        "All API routes reuse the factory",
+        "Error wrapping is consistent"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 30,
+      "name": "Implement teams fetch endpoint",
+      "description": "Create API route to return user teams/org scopes available to the token.",
+      "guidance": "Normalize response shape and include personal scope entry.",
+      "successFactors": [
+        "Endpoint returns scopes list",
+        "Personal and team scopes are represented",
+        "Unauthorized state is handled"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 31,
+      "name": "Implement projects fetch endpoint",
+      "description": "Create API route to list projects for a selected scope (team or personal).",
+      "guidance": "Support pagination internally; return simple list to UI.",
+      "successFactors": [
+        "Projects are returned for scope",
+        "Pagination is handled",
+        "Response shape is UI-ready"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 32,
+      "name": "Create projects page UI",
+      "description": "Build page listing scopes and projects with easy project selection.",
+      "guidance": "Use grouped lists or accordion sections with search/filter support.",
+      "successFactors": [
+        "Users can browse scopes",
+        "Users can search projects",
+        "Project click navigates to env editor"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 33,
+      "name": "Add projects loading states",
+      "description": "Provide skeletons/spinners while scopes and projects are loading.",
+      "guidance": "Avoid layout shift and keep controls disabled while loading.",
+      "successFactors": [
+        "Loading UI appears quickly",
+        "No broken placeholder states",
+        "Actions disable until data loads"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 34,
+      "name": "Add projects empty and error states",
+      "description": "Render useful messages when no projects exist or API calls fail.",
+      "guidance": "Include retry action and keep wording actionable.",
+      "successFactors": [
+        "Empty state explains next step",
+        "Error state includes retry",
+        "No blank screens on failure"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 35,
+      "name": "Implement custom environments fetch",
+      "description": "Add API utility to fetch project custom environments alongside built-in environments.",
+      "guidance": "Use SDK if available; fallback to documented REST endpoint if needed.",
+      "successFactors": [
+        "Built-in environments are included",
+        "Custom environments are included",
+        "Output has stable ids/slugs"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 36,
+      "name": "Implement env records fetch",
+      "description": "Create API route to retrieve raw project env rows with ids and metadata.",
+      "guidance": "Request fields needed for diff planner and preserve row IDs.",
+      "successFactors": [
+        "Raw env rows are fetched",
+        "IDs and targets are preserved",
+        "Errors are surfaced safely"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 37,
+      "name": "Compose project snapshot endpoint",
+      "description": "Create one endpoint that returns environments + env records as a baseline snapshot.",
+      "guidance": "Return a baseline hash/version to detect drift before apply.",
+      "successFactors": [
+        "Combined snapshot endpoint works",
+        "Baseline hash/version is included",
+        "Response is typed"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 38,
+      "name": "Filter unsupported rows",
+      "description": "Handle system env vars and branch-specific vars by marking read-only for v1.",
+      "guidance": "Do not drop data silently; expose clear badges or notes.",
+      "successFactors": [
+        "System vars are not editable",
+        "gitBranch-specific vars are clearly marked",
+        "User understands limitations"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 39,
+      "name": "Create editor page route",
+      "description": "Add project editor route and load snapshot data on entry.",
+      "guidance": "Use project id in path and show project metadata context.",
+      "successFactors": [
+        "Editor route is reachable",
+        "Snapshot fetch runs on load",
+        "Page handles loading and errors"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 40,
+      "name": "Define env model types",
+      "description": "Create explicit types for environment columns, value pools, row drafts, and assignments.",
+      "guidance": "Design types to support diffing, undo, and UI rendering.",
+      "successFactors": [
+        "Core model types compile",
+        "Types cover all planned states",
+        "No ambiguous any fields"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 41,
+      "name": "Build normalization function",
+      "description": "Implement conversion from raw Vercel rows to one-row-per-key matrix draft model.",
+      "guidance": "Group by key, derive value pool entries, and map environment assignments.",
+      "successFactors": [
+        "Each key appears once in matrix",
+        "Value pool entries are generated",
+        "Assignments are deterministic"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 42,
+      "name": "Preserve original row references",
+      "description": "Attach source row IDs and metadata to normalized model for minimal updates later.",
+      "guidance": "Store mapping that lets planner reuse rows instead of creating new ones.",
+      "successFactors": [
+        "Source row references are preserved",
+        "Planner can trace row origins",
+        "No identity loss during normalize"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 43,
+      "name": "Sort rows and columns predictably",
+      "description": "Apply stable ordering to keys, value entries, and environment columns.",
+      "guidance": "Use deterministic sort to avoid UI jitter and planner drift.",
+      "successFactors": [
+        "Key ordering is stable",
+        "Value labels remain stable",
+        "Column order is consistent"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 44,
+      "name": "Create draft store",
+      "description": "Add client-side state store for editor draft, baseline, and pending changes.",
+      "guidance": "Keep state normalized and expose small actions for row/value/assignment edits.",
+      "successFactors": [
+        "Store can initialize from snapshot",
+        "Store actions are typed",
+        "State updates are predictable"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 45,
+      "name": "Add row CRUD actions",
+      "description": "Implement draft actions for adding a key row, removing a new row, and renaming key.",
+      "guidance": "For now, block destructive delete of baseline rows until planner handles it safely.",
+      "successFactors": [
+        "New rows can be added",
+        "Draft-only rows can be removed",
+        "Key rename updates state"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 46,
+      "name": "Add value pool actions",
+      "description": "Implement add/edit/remove actions for per-key value entries.",
+      "guidance": "Prevent removing a value currently assigned by any environment unless reassigned first.",
+      "successFactors": [
+        "Values can be added",
+        "Values can be edited",
+        "Unsafe removal is prevented"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 47,
+      "name": "Add environment assignment actions",
+      "description": "Implement assignment action that maps each environment to valueId or null.",
+      "guidance": "Keep null as explicit first-class state to represent unset.",
+      "successFactors": [
+        "Assignments update correctly",
+        "Null selection is supported",
+        "State remains valid after edits"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 48,
+      "name": "Build editor table shell",
+      "description": "Render table structure with columns: Key, Values, and each environment.",
+      "guidance": "Use accessible table markup and preserve performance for large row counts.",
+      "successFactors": [
+        "Columns render correctly",
+        "Rows bind to store data",
+        "Table works with many columns"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 49,
+      "name": "Implement key cell editing",
+      "description": "Allow inline key editing with validation and conflict checks.",
+      "guidance": "Prevent duplicate keys in draft unless intentionally supported by planner model.",
+      "successFactors": [
+        "Inline edit works",
+        "Validation feedback is visible",
+        "Duplicate key conflicts are handled"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 50,
+      "name": "Implement value pool cell UI",
+      "description": "Render Value 1, Value 2 labels with editable inputs and add button.",
+      "guidance": "Keep controls compact and keyboard accessible.",
+      "successFactors": [
+        "Value labels display correctly",
+        "Values are editable inline",
+        "Add value action is usable"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 51,
+      "name": "Implement environment select UI",
+      "description": "Render per-environment dropdown selecting a value label or null.",
+      "guidance": "Dropdown options should update as value pool changes.",
+      "successFactors": [
+        "Dropdown shows current selection",
+        "Selecting value updates assignment",
+        "Null option works correctly"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 52,
+      "name": "Add changed-cell highlighting",
+      "description": "Visually mark rows/cells that differ from baseline.",
+      "guidance": "Use semantic update colors and keep contrast accessible.",
+      "successFactors": [
+        "Changed cells are highlighted",
+        "Unchanged cells remain neutral",
+        "Color semantics are consistent"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 53,
+      "name": "Add sticky key column",
+      "description": "Make key column sticky so context is preserved during horizontal scroll.",
+      "guidance": "Ensure sticky behavior does not overlap with dropdown menus.",
+      "successFactors": [
+        "Key column stays visible",
+        "Horizontal scroll is smooth",
+        "No z-index clipping issues"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 54,
+      "name": "Build change detector",
+      "description": "Implement logic comparing baseline and draft to produce pending semantic changes.",
+      "guidance": "Detect creates, updates, deletes, and assignment moves without false positives.",
+      "successFactors": [
+        "Change list updates after edits",
+        "No changes shown when draft equals baseline",
+        "Detected changes map to planner inputs"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 55,
+      "name": "Define operation schema",
+      "description": "Create typed operation schema for create/update/delete operations and metadata.",
+      "guidance": "Include before/after snapshots and readable summary text.",
+      "successFactors": [
+        "Operation types are explicit",
+        "Schema supports reporting",
+        "Schema supports undo mapping"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 56,
+      "name": "Implement minimal planner core",
+      "description": "Translate draft model into the smallest safe set of Vercel operations.",
+      "guidance": "Prioritize reusing existing rows by id before creating new rows.",
+      "successFactors": [
+        "Planner produces valid operations",
+        "Unchanged rows are skipped",
+        "Existing rows are reused when possible"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 57,
+      "name": "Add create operation planner",
+      "description": "Plan creation for value-target combinations that do not map to any existing row.",
+      "guidance": "Ensure new rows carry correct target and customEnvironmentIds.",
+      "successFactors": [
+        "Missing combinations become create ops",
+        "Targets are accurate",
+        "No duplicate create ops"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 58,
+      "name": "Add update operation planner",
+      "description": "Plan updates for rows that exist but need key/value/target adjustments.",
+      "guidance": "Only include changed fields in semantic comparison; avoid noisy updates.",
+      "successFactors": [
+        "Update ops target existing ids",
+        "Only changed records are updated",
+        "No unnecessary updates are emitted"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 59,
+      "name": "Add delete operation planner",
+      "description": "Plan deletions for baseline rows no longer referenced by any environment assignment.",
+      "guidance": "Ensure row is truly unused before delete planning.",
+      "successFactors": [
+        "Delete ops only target orphaned rows",
+        "No active assignment gets deleted",
+        "Delete count matches expected diff"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 60,
+      "name": "Stabilize operation ordering",
+      "description": "Order operations deterministically to avoid non-repeatable behavior.",
+      "guidance": "Use create -> update -> delete with stable secondary sorting.",
+      "successFactors": [
+        "Operation order is deterministic",
+        "Planner output is stable across runs",
+        "Execution order matches safety strategy"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 61,
+      "name": "Build change order panel",
+      "description": "Render pending operations in a side panel with type badges and concise summaries.",
+      "guidance": "Keep list scannable and allow quick navigation back to affected rows.",
+      "successFactors": [
+        "All pending ops are visible",
+        "Each item has readable summary",
+        "Panel updates in real time"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 62,
+      "name": "Implement per-item undo",
+      "description": "Add Undo action for each change item that reverts corresponding draft mutation.",
+      "guidance": "Undo should remove the item from change list immediately.",
+      "successFactors": [
+        "Undo button exists per change",
+        "Undo reverts affected UI state",
+        "Change item disappears after undo"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 63,
+      "name": "Add undo safety checks",
+      "description": "Prevent undo actions from corrupting dependent state when multiple edits overlap.",
+      "guidance": "Use immutable snapshots or invertible patches to keep undo deterministic.",
+      "successFactors": [
+        "Overlapping changes undo safely",
+        "No broken references after undo",
+        "State remains serializable"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 64,
+      "name": "Create confirm dialog",
+      "description": "Build confirmation dialog requiring exact phrase before apply is enabled.",
+      "guidance": "Phrase must be exactly: i confirm I am not an agent.",
+      "successFactors": [
+        "Dialog opens from apply button",
+        "Phrase validation is exact",
+        "Apply remains blocked until valid"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 65,
+      "name": "Show operation summary counts",
+      "description": "Display count of create/update/delete operations in confirm dialog.",
+      "guidance": "Use badges or compact labels to make impact clear before apply.",
+      "successFactors": [
+        "Counts are visible",
+        "Counts match planned operations",
+        "User can assess impact quickly"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 66,
+      "name": "Create apply route",
+      "description": "Implement API route to accept baseline hash and planned operations for execution.",
+      "guidance": "Validate payload strictly with zod before calling Vercel APIs.",
+      "successFactors": [
+        "Apply endpoint exists",
+        "Invalid payloads are rejected",
+        "Valid payload reaches executor"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 67,
+      "name": "Revalidate baseline before write",
+      "description": "Re-fetch current snapshot in apply route and compare hash to detect drift.",
+      "guidance": "Abort safely with actionable message if baseline changed.",
+      "successFactors": [
+        "Baseline mismatch is detected",
+        "Writes are blocked on drift",
+        "Response explains next action"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 68,
+      "name": "Implement create executor",
+      "description": "Execute create operations against Vercel API and capture per-item result.",
+      "guidance": "Map operation fields precisely to SDK request body.",
+      "successFactors": [
+        "Create ops call API successfully",
+        "Failures are captured per item",
+        "Result includes created ids"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 69,
+      "name": "Implement update executor",
+      "description": "Execute update operations for existing env rows by id.",
+      "guidance": "Use minimal payload while preserving required fields for endpoint semantics.",
+      "successFactors": [
+        "Update ops target correct ids",
+        "Changed data is reflected in API",
+        "Per-item status is recorded"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 70,
+      "name": "Implement delete executor",
+      "description": "Execute delete operations for orphaned env rows.",
+      "guidance": "Delete only after create/update batch is complete.",
+      "successFactors": [
+        "Delete ops run after create/update",
+        "Only planned ids are deleted",
+        "Delete statuses are reported"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 71,
+      "name": "Add apply result schema",
+      "description": "Define structured response shape with done/failed/skipped per operation.",
+      "guidance": "Keep report machine-readable and easy to render in UI.",
+      "successFactors": [
+        "Report schema is typed",
+        "Each operation returns status",
+        "Error messages are sanitized"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 72,
+      "name": "Create apply progress UI",
+      "description": "Show in-editor loading state while apply runs and disable further edits temporarily.",
+      "guidance": "Prevent duplicate submissions during in-flight apply.",
+      "successFactors": [
+        "Loading state appears during apply",
+        "Controls disable appropriately",
+        "No duplicate apply requests"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 73,
+      "name": "Render final report UI",
+      "description": "Display operation report grouped by status after apply completes.",
+      "guidance": "Show concise summaries and optional detailed error text on demand.",
+      "successFactors": [
+        "done/failed/skipped groups display",
+        "User can inspect failures",
+        "Report is readable on mobile"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 74,
+      "name": "Refresh snapshot after success",
+      "description": "After successful apply, re-fetch latest project snapshot and reset baseline/draft.",
+      "guidance": "Clear stale change list and reflect true current server state.",
+      "successFactors": [
+        "Snapshot reloads after success",
+        "Pending changes clear",
+        "Table reflects latest values"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 75,
+      "name": "Preserve failed operations",
+      "description": "Keep failed operations visible for retry instead of dropping all state.",
+      "guidance": "Allow users to fix data and re-run apply with minimal friction.",
+      "successFactors": [
+        "Failed items remain inspectable",
+        "User can retry after correction",
+        "No silent state loss"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 76,
+      "name": "Add keyboard accessibility pass",
+      "description": "Verify tab order and keyboard control for key controls, selects, dialogs, and undo buttons.",
+      "guidance": "Use focus-visible styles and avoid keyboard traps.",
+      "successFactors": [
+        "All controls reachable by keyboard",
+        "Dialog can be fully operated by keyboard",
+        "Focus states are visible"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 77,
+      "name": "Add mobile drawer for change panel",
+      "description": "Switch side panel to drawer mode on smaller screens for better usability.",
+      "guidance": "Keep undo actions and summaries fully available in drawer mode.",
+      "successFactors": [
+        "Drawer appears on mobile",
+        "Change list remains functional",
+        "Layout does not overflow"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 78,
+      "name": "Write normalization tests",
+      "description": "Add unit tests for converting raw env rows into matrix rows and assignments.",
+      "guidance": "Use fixtures with duplicate keys and mixed built-in/custom environments.",
+      "successFactors": [
+        "Tests cover duplicate key cases",
+        "Assignments are validated",
+        "Tests pass reliably"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 79,
+      "name": "Write planner minimality tests",
+      "description": "Add tests proving unchanged drafts produce zero operations and small edits produce minimal operations.",
+      "guidance": "Use focused fixtures for create-only, update-only, delete-only, and mixed scenarios.",
+      "successFactors": [
+        "No-op case returns empty plan",
+        "Single-field edit yields minimal ops",
+        "Mixed case matches expected count"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 80,
+      "name": "Write undo behavior tests",
+      "description": "Add tests for per-item undo including overlapping and sequential changes.",
+      "guidance": "Verify state and change list integrity after each undo.",
+      "successFactors": [
+        "Undo restores expected state",
+        "Change list updates correctly",
+        "No dangling references remain"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 81,
+      "name": "Write apply executor tests",
+      "description": "Add integration-style tests with mocked Vercel responses for create/update/delete execution.",
+      "guidance": "Cover partial failures and verify status reporting.",
+      "successFactors": [
+        "Executor runs planned order",
+        "Partial failures are reported",
+        "Sanitized errors are returned"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 82,
+      "name": "Write confirm gate tests",
+      "description": "Test exact phrase requirement and blocked apply when phrase is incorrect.",
+      "guidance": "Include case and spacing mismatch tests.",
+      "successFactors": [
+        "Incorrect phrase blocks apply",
+        "Exact phrase enables apply",
+        "Tests pass consistently"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 83,
+      "name": "Add README quickstart",
+      "description": "Document install/run usage, npx command, default URL, and token setup instructions.",
+      "guidance": "Keep quickstart concise and put token URL near the top.",
+      "successFactors": [
+        "README includes npx usage",
+        "README includes token generation link",
+        "README mentions localhost:6969"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 84,
+      "name": "Add README limitations",
+      "description": "Document v1 limits such as session-only auth and branch-specific env handling policy.",
+      "guidance": "Be explicit about what is read-only in this release.",
+      "successFactors": [
+        "Limitations section exists",
+        "Security behavior is described",
+        "Read-only behavior is documented"
+      ],
+      "completed": false
+    }
+  ]
+}
