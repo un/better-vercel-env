@@ -1,5 +1,6 @@
 import { VercelCliError, defaultVercelCliRunner, type VercelCliCommandRunner } from "./index";
 import type { CliApplyAction } from "./apply-builder";
+import { redactSensitiveText } from "./redact";
 
 export interface CliApplyActionResult {
   operationId: string;
@@ -89,7 +90,7 @@ export async function executeCliAddActions(
           operationId: action.operationId,
           actionKind: action.actionKind,
           status: "failed",
-          message: error.details.message,
+          message: redactSensitiveText(error.details.message),
         });
         continue;
       }

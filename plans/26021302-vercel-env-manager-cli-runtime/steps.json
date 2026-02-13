@@ -399,7 +399,7 @@
         "Partial failures are reported",
         "Secrets are not leaked"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 33,
