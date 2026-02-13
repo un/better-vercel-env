@@ -19,13 +19,33 @@ function createEmptyAssignments(snapshot: ProjectEnvSnapshot): EnvMatrixRowDraft
   }, {} as EnvMatrixRowDraft["assignments"]);
 }
 
+function sortEnvironmentColumns(snapshot: ProjectEnvSnapshot): ProjectEnvSnapshot["environments"] {
+  const builtInOrder = ["production", "preview", "development"];
+
+  return [...snapshot.environments].sort((left, right) => {
+    if (left.kind === "built_in" && right.kind === "built_in") {
+      return builtInOrder.indexOf(left.id) - builtInOrder.indexOf(right.id);
+    }
+
+    if (left.kind === "built_in") {
+      return -1;
+    }
+
+    if (right.kind === "built_in") {
+      return 1;
+    }
+
+    return left.name.localeCompare(right.name) || left.id.localeCompare(right.id);
+  });
+}
+
 function normalizeKeyGroup(key: string, records: RawVercelEnvRecord[], snapshot: ProjectEnvSnapshot): EnvMatrixRowDraft {
   const valueBySignature = new Map<string, ValuePoolEntry>();
   let valueCounter = 0;
 
   const assignments = createEmptyAssignments(snapshot);
 
-  records.forEach((record) => {
+  [...records].sort((left, right) => left.id.localeCompare(right.id)).forEach((record) => {
     const signature = toValueSignature(record);
     const existingValue = valueBySignature.get(signature);
 
@@ -55,12 +75,41 @@ function normalizeKeyGroup(key: string, records: RawVercelEnvRecord[], snapshot:
     });
   });
 
+  const sortedValues = Array.from(valueBySignature.values()).sort((left, right) => {
+    return (
+      left.content.localeCompare(right.content) ||
+      left.type.localeCompare(right.type) ||
+      (left.comment ?? "").localeCompare(right.comment ?? "") ||
+      (left.gitBranch ?? "").localeCompare(right.gitBranch ?? "") ||
+      left.id.localeCompare(right.id)
+    );
+  });
+
+  const valueIdMap = new Map<string, string>();
+  const renumberedValues = sortedValues.map((value, index) => {
+    const newId = `value-${index + 1}`;
+    valueIdMap.set(value.id, newId);
+    return {
+      ...value,
+      id: newId,
+    };
+  });
+
+  const remappedAssignments = Object.entries(assignments).reduce<EnvMatrixRowDraft["assignments"]>(
+    (result, [environmentId, valueId]) => {
+      result[environmentId as keyof EnvMatrixRowDraft["assignments"]] =
+        valueId ? valueIdMap.get(valueId) ?? valueId : null;
+      return result;
+    },
+    {} as EnvMatrixRowDraft["assignments"],
+  );
+
   return {
     rowId: `row:${key}`,
     key,
-    values: Array.from(valueBySignature.values()),
-    assignments,
-    sourceRows: records,
+    values: renumberedValues,
+    assignments: remappedAssignments,
+    sourceRows: [...records].sort((left, right) => left.id.localeCompare(right.id)),
     isNew: false,
   };
 }
@@ -76,9 +125,14 @@ export function normalizeSnapshotToDraft(snapshot: ProjectEnvSnapshot): EnvMatri
     rowsByKey.get(record.key)?.push(record);
   });
 
-  const rows = Array.from(rowsByKey.entries()).map(([key, records]) =>
-    normalizeKeyGroup(key, records, snapshot),
-  );
+  const orderedSnapshot = {
+    ...snapshot,
+    environments: sortEnvironmentColumns(snapshot),
+  };
+
+  const rows = Array.from(rowsByKey.entries())
+    .sort(([leftKey], [rightKey]) => leftKey.localeCompare(rightKey))
+    .map(([key, records]) => normalizeKeyGroup(key, records, orderedSnapshot));
 
   const sourceRowIndex = snapshot.records.reduce<Record<string, RawVercelEnvRecord>>(
     (result, row) => {
@@ -90,7 +144,7 @@ export function normalizeSnapshotToDraft(snapshot: ProjectEnvSnapshot): EnvMatri
 
   return {
     projectId: snapshot.projectId,
-    environments: snapshot.environments,
+    environments: orderedSnapshot.environments,
     rows,
     sourceRowIndex,
     baselineHash: snapshot.baselineHash,
