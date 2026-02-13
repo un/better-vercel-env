@@ -231,7 +231,7 @@
         "Rows merge by key correctly",
         "Ordering is stable"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 19,
