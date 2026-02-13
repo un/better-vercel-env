@@ -447,7 +447,7 @@
         "IDs and targets are preserved",
         "Errors are surfaced safely"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 37,
