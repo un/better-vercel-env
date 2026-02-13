@@ -15,6 +15,9 @@ interface EnvDraftState {
   addRow: (key?: string) => void;
   removeRow: (rowId: string) => void;
   renameRowKey: (rowId: string, key: string) => void;
+  addValue: (rowId: string) => void;
+  editValue: (rowId: string, valueId: string, content: string) => void;
+  removeValue: (rowId: string, valueId: string) => void;
   reset: () => void;
 }
 
@@ -108,6 +111,101 @@ export const useEnvDraftStore = create<EnvDraftState>((set) => ({
                 }
               : row,
           ),
+        },
+      };
+    });
+  },
+  addValue: (rowId) => {
+    set((state) => {
+      if (!state.draft) {
+        return state;
+      }
+
+      return {
+        ...state,
+        draft: {
+          ...state.draft,
+          rows: state.draft.rows.map((row) => {
+            if (row.rowId !== rowId) {
+              return row;
+            }
+
+            return {
+              ...row,
+              values: [
+                ...row.values,
+                {
+                  id: `value-${row.values.length + 1}`,
+                  content: "",
+                  type: "plain",
+                  comment: null,
+                  gitBranch: null,
+                  readOnlyReason: null,
+                  sourceRows: [],
+                },
+              ],
+            };
+          }),
+        },
+      };
+    });
+  },
+  editValue: (rowId, valueId, content) => {
+    set((state) => {
+      if (!state.draft) {
+        return state;
+      }
+
+      return {
+        ...state,
+        draft: {
+          ...state.draft,
+          rows: state.draft.rows.map((row) => {
+            if (row.rowId !== rowId) {
+              return row;
+            }
+
+            return {
+              ...row,
+              values: row.values.map((value) =>
+                value.id === valueId
+                  ? {
+                      ...value,
+                      content,
+                    }
+                  : value,
+              ),
+            };
+          }),
+        },
+      };
+    });
+  },
+  removeValue: (rowId, valueId) => {
+    set((state) => {
+      if (!state.draft) {
+        return state;
+      }
+
+      return {
+        ...state,
+        draft: {
+          ...state.draft,
+          rows: state.draft.rows.map((row) => {
+            if (row.rowId !== rowId) {
+              return row;
+            }
+
+            const hasAssignment = Object.values(row.assignments).includes(valueId);
+            if (hasAssignment) {
+              return row;
+            }
+
+            return {
+              ...row,
+              values: row.values.filter((value) => value.id !== valueId),
+            };
+          }),
         },
       };
     });
