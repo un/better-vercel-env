@@ -687,7 +687,7 @@
         "Unchanged rows are skipped",
         "Existing rows are reused when possible"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 57,
