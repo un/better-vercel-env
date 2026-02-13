@@ -1,0 +1,453 @@
+{
+  "planId": "26021302",
+  "planSlug": "vercel-env-manager-cli-runtime",
+  "planFile": "plans/26021302-vercel-env-manager-cli-runtime.md",
+  "title": "Vercel Better Env CLI Runtime Pivot Steps",
+  "createdAt": "2026-02-13",
+  "executionProtocol": {
+    "beforeEachStep": [
+      "Read plans/26021302-vercel-env-manager-cli-runtime/learnings.md before starting.",
+      "Apply relevant prior learnings in implementation choices.",
+      "Keep each step tightly scoped and avoid unrelated refactors."
+    ],
+    "afterEachStep": [
+      "If there are new learnings, prepend them to plans/26021302-vercel-env-manager-cli-runtime/learnings.md.",
+      "Mark completed=true only when all success factors pass.",
+      "Run lint, typecheck, and tests relevant to touched modules."
+    ]
+  },
+  "steps": [
+    {
+      "serial": 1,
+      "name": "Audit SDK usage",
+      "description": "Locate all routes/libs/components currently depending on @vercel/sdk or token-session APIs.",
+      "guidance": "Create a migration map by file path and usage type (read, write, auth).",
+      "successFactors": [
+        "All SDK call sites are identified",
+        "All token-session call sites are identified",
+        "Migration map is documented"
+      ],
+      "completed": true
+    },
+    {
+      "serial": 2,
+      "name": "Define CLI adapter contract",
+      "description": "Create typed interfaces for CLI command execution and normalized results/errors.",
+      "guidance": "Keep command-layer interfaces independent from UI-level models.",
+      "successFactors": [
+        "Command result type is defined",
+        "Error shape is standardized",
+        "Route handlers can depend on interfaces"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 3,
+      "name": "Implement command runner",
+      "description": "Add child_process-based command runner with argv safety and timeout handling.",
+      "guidance": "Use spawn with arg arrays; avoid shell interpolation.",
+      "successFactors": [
+        "Commands run with cwd support",
+        "Timeout kills long-running commands",
+        "Stdout/stderr are captured"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 4,
+      "name": "Add output redaction utility",
+      "description": "Create helper to redact secret-looking values from command output and errors.",
+      "guidance": "Mask potential tokens and env values before logging or returning API errors.",
+      "successFactors": [
+        "Redaction helper exists",
+        "Runner applies redaction",
+        "No plaintext secrets in error payloads"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 5,
+      "name": "Add CLI auth status function",
+      "description": "Implement whoami-based auth check that returns logged-in user and active scope status.",
+      "guidance": "Treat non-zero exit as unauthenticated with actionable message.",
+      "successFactors": [
+        "Authenticated user is detected",
+        "Unauthenticated state is explicit",
+        "Errors are actionable"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 6,
+      "name": "Create auth status route",
+      "description": "Add API route that exposes CLI authentication state to the onboarding page.",
+      "guidance": "Do not expose any token values; only status and identity metadata.",
+      "successFactors": [
+        "Route returns authenticated/unauthenticated",
+        "Identity fields are present when logged in",
+        "No secrets are returned"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 7,
+      "name": "Replace token onboarding UI",
+      "description": "Replace token paste form with CLI-auth onboarding showing whoami status.",
+      "guidance": "Show exact commands users should run: vercel login, vercel switch.",
+      "successFactors": [
+        "No token input is required",
+        "CLI status is visible",
+        "Onboarding guidance is clear"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 8,
+      "name": "Remove token submit flow",
+      "description": "Delete client/API interactions for posting token to app-managed session storage.",
+      "guidance": "Preserve route compatibility only if needed for graceful migration.",
+      "successFactors": [
+        "Token submit requests are removed",
+        "No token cookie writes remain",
+        "Routing still works"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 9,
+      "name": "Implement teams list parser",
+      "description": "Add parser for vercel teams list output to derive team scopes.",
+      "guidance": "Use --no-color and robust whitespace handling.",
+      "successFactors": [
+        "Team ids/slugs parse reliably",
+        "Current scope is detectable",
+        "Parser handles empty output"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 10,
+      "name": "Implement scopes route via CLI",
+      "description": "Replace scopes route internals to use whoami + teams list instead of SDK.",
+      "guidance": "Return personal and team scopes in existing API shape.",
+      "successFactors": [
+        "Scope route is CLI-backed",
+        "Existing frontend contracts still work",
+        "Auth errors are handled"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 11,
+      "name": "Implement projects list via CLI",
+      "description": "Use vercel project list --json for selected scope and normalize response.",
+      "guidance": "Keep pagination/search behavior compatible with existing UI.",
+      "successFactors": [
+        "Projects load from CLI JSON",
+        "Project fields normalize correctly",
+        "Search remains functional"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 12,
+      "name": "Replace projects route internals",
+      "description": "Migrate /api/vercel/projects route to CLI implementation.",
+      "guidance": "Preserve response schema to minimize frontend churn.",
+      "successFactors": [
+        "Route no longer calls SDK",
+        "Error mapping remains stable",
+        "Projects browser still loads"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 13,
+      "name": "Create temp workspace manager",
+      "description": "Add workspace utility for project-scoped temporary linked directories.",
+      "guidance": "Use TTL and locking to avoid concurrent link races.",
+      "successFactors": [
+        "Workspace paths are deterministic per project/scope",
+        "TTL cleanup works",
+        "Concurrent access is safe"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 14,
+      "name": "Add vercel link wrapper",
+      "description": "Wrap vercel link command for non-interactive project linking in temp cwd.",
+      "guidance": "Use --yes, --project, and --scope.",
+      "successFactors": [
+        "Link command succeeds in temp cwd",
+        "Errors are normalized",
+        "Linked state is reusable"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 15,
+      "name": "Add env pull wrapper",
+      "description": "Wrap vercel env pull for each target environment with deterministic temp filenames.",
+      "guidance": "Pull development, preview, and production separately.",
+      "successFactors": [
+        "Each environment can be pulled",
+        "Output files are generated",
+        "Failures are explicit"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 16,
+      "name": "Implement dotenv parser",
+      "description": "Parse pulled env files into key/value maps with quote and escape handling.",
+      "guidance": "Use a tested parser; do not write ad-hoc parsing if avoidable.",
+      "successFactors": [
+        "Quoted values parse correctly",
+        "Escaped newlines parse correctly",
+        "Empty values are handled"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 17,
+      "name": "Define reserved-key filter",
+      "description": "Add policy for excluding non-user runtime variables from editable matrix.",
+      "guidance": "Filter reserved keys like VERCEL_* by default with clear rationale.",
+      "successFactors": [
+        "Reserved-key policy is codified",
+        "Filtered keys are not editable",
+        "Policy is documented"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 18,
+      "name": "Build CLI snapshot normalizer",
+      "description": "Merge per-environment pulled maps into existing project snapshot shape.",
+      "guidance": "Generate stable ids and deterministic ordering.",
+      "successFactors": [
+        "Snapshot shape matches consumer expectations",
+        "Rows merge by key correctly",
+        "Ordering is stable"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 19,
+      "name": "Replace snapshot route internals",
+      "description": "Migrate project snapshot route to CLI pull pipeline.",
+      "guidance": "Keep baseline hash semantics consistent.",
+      "successFactors": [
+        "Route no longer depends on SDK env list",
+        "Baseline hash still computes",
+        "Editor loads data"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 20,
+      "name": "Add capability flags to model",
+      "description": "Expose CLI capability metadata for custom env and branch support decisions.",
+      "guidance": "Drive UI read-only behavior from explicit flags.",
+      "successFactors": [
+        "Capabilities are typed",
+        "Capabilities are emitted by backend",
+        "UI can consume flags"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 21,
+      "name": "Update read-only policy UI",
+      "description": "Render clear read-only reasons for unsupported CLI capabilities.",
+      "guidance": "Do not silently allow edits that cannot be applied.",
+      "successFactors": [
+        "Unsupported edits are blocked",
+        "Reasons are visible to users",
+        "No silent drops"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 22,
+      "name": "Implement CLI apply command builder",
+      "description": "Map planned operations to explicit vercel env add/rm command descriptors.",
+      "guidance": "Use stable ordering and include force/yes flags where required.",
+      "successFactors": [
+        "Create/update/delete map to commands",
+        "Ordering is deterministic",
+        "Unsupported ops map to skipped"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 23,
+      "name": "Execute add operations via stdin",
+      "description": "Run vercel env add with value piping for safe non-interactive writes.",
+      "guidance": "Never include plaintext values in command args or logs.",
+      "successFactors": [
+        "Values are passed via stdin",
+        "Add/update succeeds with --force",
+        "No value leakage in logs"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 24,
+      "name": "Execute remove operations",
+      "description": "Run vercel env rm with non-interactive confirmation.",
+      "guidance": "Use -y and capture per-item status.",
+      "successFactors": [
+        "Delete commands run non-interactively",
+        "Per-item status is captured",
+        "Failures are actionable"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 25,
+      "name": "Replace apply route internals",
+      "description": "Migrate apply API route to CLI executor while preserving response schema.",
+      "guidance": "Keep confirm/baseline checks intact.",
+      "successFactors": [
+        "Apply route is CLI-backed",
+        "Report schema is preserved",
+        "Drift checks still work"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 26,
+      "name": "Add apply lock per project",
+      "description": "Prevent concurrent apply executions against the same project/scope.",
+      "guidance": "Return conflict response when lock is held.",
+      "successFactors": [
+        "Concurrent apply is blocked",
+        "Lock releases on completion/failure",
+        "UI receives clear message"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 27,
+      "name": "Keep post-apply refresh",
+      "description": "Re-pull snapshot after successful apply to reflect true cloud state.",
+      "guidance": "Do not trust optimistic local state after writes.",
+      "successFactors": [
+        "Refresh runs after success",
+        "Draft/baseline reset correctly",
+        "UI shows latest values"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 28,
+      "name": "Remove token session infrastructure",
+      "description": "Delete app-managed token session/cookie flows no longer needed in CLI auth mode.",
+      "guidance": "Preserve only what is necessary for local app behavior.",
+      "successFactors": [
+        "Token session store is removed",
+        "Token cookie logic is removed",
+        "No stale references remain"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 29,
+      "name": "Remove SDK dependency usage",
+      "description": "Eliminate all runtime imports/usages of @vercel/sdk from app code.",
+      "guidance": "Keep only CLI adapter integration for Vercel operations.",
+      "successFactors": [
+        "No runtime SDK imports remain",
+        "Build succeeds without SDK paths",
+        "Migration map is fully closed"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 30,
+      "name": "Add command fixture tests",
+      "description": "Unit-test CLI command builders and parser fixtures for output stability.",
+      "guidance": "Include malformed and partial-output cases.",
+      "successFactors": [
+        "Command builders are covered",
+        "Parsers are fixture-tested",
+        "Error paths are covered"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 31,
+      "name": "Add pull merge tests",
+      "description": "Test env pull merge logic across development/preview/production files.",
+      "guidance": "Cover key overlap, missing keys, and reserved-key filtering.",
+      "successFactors": [
+        "Merge logic is deterministic",
+        "Reserved keys are filtered",
+        "Assignments are correct"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 32,
+      "name": "Add apply executor tests",
+      "description": "Test CLI apply executor ordering, partial failures, and sanitization.",
+      "guidance": "Mock process layer; verify no plaintext leaks.",
+      "successFactors": [
+        "Execution order is validated",
+        "Partial failures are reported",
+        "Secrets are not leaked"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 33,
+      "name": "Add auth flow tests",
+      "description": "Test onboarding states for unauthenticated and authenticated CLI sessions.",
+      "guidance": "Cover refresh/retry and guidance text paths.",
+      "successFactors": [
+        "Unauthenticated state is tested",
+        "Authenticated state is tested",
+        "Navigation behavior is correct"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 34,
+      "name": "Update README auth section",
+      "description": "Rewrite docs to explain CLI-based auth and remove token-paste instructions.",
+      "guidance": "Document vercel login and scope selection commands.",
+      "successFactors": [
+        "README reflects CLI auth",
+        "Old token-paste docs removed",
+        "Troubleshooting guidance included"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 35,
+      "name": "Document capability caveats",
+      "description": "Document CLI capability limits and how skipped operations are reported.",
+      "guidance": "Be explicit about unsupported custom/branch cases.",
+      "successFactors": [
+        "Capability caveats are explicit",
+        "Skipped semantics documented",
+        "User expectations are clear"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 36,
+      "name": "Run full validation",
+      "description": "Run lint, typecheck, tests, and manual smoke checks with a real CLI-authenticated project.",
+      "guidance": "Use a known project fixture such as wiggy for smoke validation.",
+      "successFactors": [
+        "Automated checks pass",
+        "Manual smoke path works",
+        "Known encrypted-read issue is resolved"
+      ],
+      "completed": false
+    }
+  ]
+}
