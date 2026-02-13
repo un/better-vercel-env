@@ -543,7 +543,7 @@
         "Store actions are typed",
         "State updates are predictable"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 45,
