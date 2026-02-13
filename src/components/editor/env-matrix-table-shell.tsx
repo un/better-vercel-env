@@ -1,8 +1,13 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import { useEnvDraftStore } from "@/lib/env-model";
 
-export function EnvMatrixTableShell() {
+interface EnvMatrixTableShellProps {
+  disabled?: boolean;
+}
+
+export function EnvMatrixTableShell({ disabled = false }: EnvMatrixTableShellProps) {
   const baseline = useEnvDraftStore((state) => state.baseline);
   const draft = useEnvDraftStore((state) => state.draft);
   const renameRowKey = useEnvDraftStore((state) => state.renameRowKey);
@@ -57,7 +62,7 @@ export function EnvMatrixTableShell() {
                   className={`sticky left-0 z-10 px-3 py-2 align-top ${keyChanged ? "status-update" : "bg-card"}`}
                 >
                   <input
-                    className={`w-full rounded-md border px-2 py-1 text-sm ${
+                    className={`w-full rounded-md border px-2 py-1 text-sm outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-60 ${
                       !row.key.trim() || (keyCounts.get(row.key.trim().toLowerCase()) ?? 0) > 1
                         ? "border-destructive"
                         : "border-border"
@@ -65,6 +70,7 @@ export function EnvMatrixTableShell() {
                     value={row.key}
                     onChange={(event) => renameRowKey(row.rowId, event.target.value)}
                     aria-label={`Key for row ${row.rowId}`}
+                    disabled={disabled}
                   />
                   {!row.key.trim() ? (
                     <p className="mt-1 text-xs text-destructive">Key is required.</p>
@@ -78,20 +84,24 @@ export function EnvMatrixTableShell() {
                     <label key={value.id} className="mb-2 block">
                       <span className="mb-1 block text-xs font-medium text-foreground">Value {index + 1}</span>
                       <input
-                        className="w-full rounded-md border border-border px-2 py-1 text-sm"
+                        className="w-full rounded-md border border-border px-2 py-1 text-sm outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-60"
                         value={value.content}
                         onChange={(event) => editValue(row.rowId, value.id, event.target.value)}
                         aria-label={`Value ${index + 1} for ${row.key}`}
+                        disabled={disabled}
                       />
                     </label>
                   ))}
-                  <button
+                  <Button
                     type="button"
-                    className="rounded-md border border-border px-2 py-1 text-xs font-medium text-foreground hover:bg-accent"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 px-2 text-xs"
                     onClick={() => addValue(row.rowId)}
+                    disabled={disabled}
                   >
                     Add value
-                  </button>
+                  </Button>
                 </td>
                 {environments.map((environment) => {
                   const assignedValueId = row.assignments[environment.id];
@@ -104,7 +114,7 @@ export function EnvMatrixTableShell() {
                       className={`px-3 py-2 align-top text-muted-foreground ${assignmentChanged ? "status-update" : ""}`}
                     >
                       <select
-                        className="w-full rounded-md border border-border px-2 py-1 text-sm"
+                        className="w-full rounded-md border border-border px-2 py-1 text-sm outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-60"
                         value={assignedValueId ?? ""}
                         onChange={(event) =>
                           setAssignment(
@@ -114,6 +124,7 @@ export function EnvMatrixTableShell() {
                           )
                         }
                         aria-label={`${environment.name} assignment for ${row.key}`}
+                        disabled={disabled}
                       >
                         <option value="">Unset</option>
                         {row.values.map((value) => (

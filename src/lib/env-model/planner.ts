@@ -1,4 +1,3 @@
-import { detectDraftChanges } from "./change-detector";
 import type { EnvMatrixDraft } from "./types";
 import type { EnvOperation, OperationKind, PlannedOperations } from "./operations";
 
@@ -9,34 +8,13 @@ interface DesiredCombo {
   customEnvironmentIds: string[];
 }
 
-function toSnapshot(row: EnvMatrixDraft["rows"][number]) {
-  return {
-    rowId: row.rowId,
-    key: row.key,
-    value: row.values[0]?.content,
-    target: row.sourceRows[0]?.target,
-    customEnvironmentIds: row.sourceRows[0]?.customEnvironmentIds,
-  };
-}
-
-function mapChangeKind(kind: "create" | "update" | "delete" | "rename" | "retarget"): OperationKind {
-  if (kind === "create") {
-    return "create_env";
-  }
-
-  if (kind === "update") {
-    return "update_env";
-  }
-
-  if (kind === "delete") {
-    return "delete_env";
-  }
-
-  if (kind === "rename") {
-    return "rename_key";
-  }
-
-  return "retarget";
+function rowRequiresUpdate(
+  baselineRow: EnvMatrixDraft["rows"][number],
+  draftRow: EnvMatrixDraft["rows"][number],
+): boolean {
+  const baselinePrimaryValue = baselineRow.values[0]?.content ?? "";
+  const draftPrimaryValue = draftRow.values[0]?.content ?? "";
+  return baselineRow.key !== draftRow.key || baselinePrimaryValue !== draftPrimaryValue;
 }
 
 function toComboSignature(combo: DesiredCombo): string {
@@ -106,6 +84,10 @@ function planCreateOperations(
 
   draftRows.forEach((draftRow, rowId) => {
     const baselineRow = baselineRows.get(rowId);
+    if (baselineRow && rowRequiresUpdate(baselineRow, draftRow)) {
+      return;
+    }
+
     const existingSignatures = baselineRow ? getExistingComboSignatures(baselineRow) : new Set<string>();
     const desiredCombos = getDesiredCombos(draftRow);
 
@@ -148,9 +130,8 @@ function planUpdateOperations(
       return;
     }
 
-    const baselinePrimaryValue = baselineRow.values[0]?.content ?? "";
+    const requiresUpdate = rowRequiresUpdate(baselineRow, draftRow);
     const draftPrimaryValue = draftRow.values[0]?.content ?? "";
-    const requiresUpdate = baselineRow.key !== draftRow.key || baselinePrimaryValue !== draftPrimaryValue;
 
     if (!requiresUpdate) {
       return;
@@ -192,6 +173,10 @@ function planDeleteOperations(
 
   baselineRows.forEach((baselineRow, rowId) => {
     const draftRow = draftRows.get(rowId);
+    if (draftRow && rowRequiresUpdate(baselineRow, draftRow)) {
+      return;
+    }
+
     const desiredSignatures = draftRow
       ? new Set(getDesiredCombos(draftRow).map((combo) => toComboSignature(combo)))
       : new Set<string>();
@@ -230,37 +215,17 @@ function planDeleteOperations(
 }
 
 export function planOperations(baseline: EnvMatrixDraft, draft: EnvMatrixDraft): PlannedOperations {
-  const changes = detectDraftChanges(baseline, draft);
   const baselineRows = new Map(baseline.rows.map((row) => [row.rowId, row]));
   const draftRows = new Map(draft.rows.map((row) => [row.rowId, row]));
-
-  const changeOperations: EnvOperation[] = changes
-    .filter((change) => change.kind !== "update" && change.kind !== "delete")
-    .map((change) => {
-      const beforeRow = baselineRows.get(change.rowId);
-      const afterRow = draftRows.get(change.rowId);
-
-      return {
-      id: change.changeId,
-      kind: mapChangeKind(change.kind),
-      summary: change.summary,
-      rowId: change.rowId,
-      before: beforeRow ? toSnapshot(beforeRow) : null,
-      after: afterRow ? toSnapshot(afterRow) : null,
-      undoToken: `undo:${change.changeId}`,
-      };
-    });
 
   const createOperations = planCreateOperations(baselineRows, draftRows);
   const updateOperations = planUpdateOperations(baselineRows, draftRows);
   const deleteOperations = planDeleteOperations(baselineRows, draftRows);
   const operationsById = new Map<string, EnvOperation>();
 
-  [...changeOperations, ...createOperations, ...updateOperations, ...deleteOperations].forEach(
-    (operation) => {
-      operationsById.set(operation.id, operation);
-    },
-  );
+  [...createOperations, ...updateOperations, ...deleteOperations].forEach((operation) => {
+    operationsById.set(operation.id, operation);
+  });
 
   const operationOrder: Record<OperationKind, number> = {
     create_env: 0,

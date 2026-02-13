@@ -36,12 +36,12 @@ export function ResponsivePanelLayout({
               Open change panel
             </Button>
           </SheetTrigger>
-          <SheetContent side="bottom" className="max-h-[80vh] overflow-auto">
+          <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto">
             <SheetHeader>
               <SheetTitle>{panelTitle}</SheetTitle>
               {panelDescription ? <SheetDescription>{panelDescription}</SheetDescription> : null}
             </SheetHeader>
-            <div className="mt-4">{panel}</div>
+            <div className="mt-4 pb-6">{panel}</div>
           </SheetContent>
         </Sheet>
       </div>

@@ -38,3 +38,17 @@ export interface VercelProjectSummary {
   framework: string | null;
   updatedAt: number;
 }
+
+export type ApplyOperationStatus = "done" | "failed" | "skipped";
+
+export interface ApplyOperationResult {
+  operationId: string;
+  status: ApplyOperationStatus;
+  createdId: string | null;
+  message: string | null;
+}
+
+export interface ApplyResultData {
+  accepted: number;
+  results: ApplyOperationResult[];
+}

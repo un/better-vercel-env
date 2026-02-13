@@ -5,9 +5,10 @@ import { useEffect, useState } from "react";
 import { ChangeOrderPanel } from "@/components/editor/change-order-panel";
 import { EnvMatrixTableShell } from "@/components/editor/env-matrix-table-shell";
 import { ResponsivePanelLayout } from "@/components/responsive-panel-layout";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useEnvDraftStore } from "@/lib/env-model";
-import type { ProjectEnvSnapshot } from "@/lib/types";
+import { useEnvDraftStore, type EnvOperation } from "@/lib/env-model";
+import type { ApiResponse, ApplyResultData, ProjectEnvSnapshot } from "@/lib/types";
 
 interface SnapshotResponse {
   data?: ProjectEnvSnapshot;
@@ -16,6 +17,8 @@ interface SnapshotResponse {
   };
 }
 
+type ApplyResponse = ApiResponse<ApplyResultData>;
+
 interface EditorSnapshotLoaderProps {
   projectId: string;
   scopeId: string;
@@ -23,10 +26,15 @@ interface EditorSnapshotLoaderProps {
 
 export function EditorSnapshotLoader({ projectId, scopeId }: EditorSnapshotLoaderProps) {
   const initializeFromSnapshot = useEnvDraftStore((state) => state.initializeFromSnapshot);
+  const draft = useEnvDraftStore((state) => state.draft);
   const [snapshot, setSnapshot] = useState<ProjectEnvSnapshot | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [isApplying, setIsApplying] = useState(false);
+  const [applyReport, setApplyReport] = useState<ApplyResultData | null>(null);
+  const [applyMessage, setApplyMessage] = useState<string | null>(null);
+  const [failedOperationIds, setFailedOperationIds] = useState<Set<string> | null>(null);
 
   useEffect(() => {
     const loadSnapshot = async () => {
@@ -57,6 +65,62 @@ export function EditorSnapshotLoader({ projectId, scopeId }: EditorSnapshotLoade
 
     void loadSnapshot();
   }, [projectId, scopeId, refreshKey, initializeFromSnapshot]);
+
+  const handleApply = async (operations: EnvOperation[]): Promise<void> => {
+    if (isApplying || operations.length === 0) {
+      return;
+    }
+
+    const baselineHash = draft?.baselineHash ?? snapshot?.baselineHash;
+    if (!baselineHash) {
+      setApplyMessage("Cannot apply without baseline hash. Reload snapshot and try again.");
+      return;
+    }
+
+    setIsApplying(true);
+    setApplyMessage(null);
+
+    try {
+      const response = await fetch("/api/vercel/apply", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          projectId,
+          scopeId,
+          baselineHash,
+          operations,
+        }),
+      });
+
+      const payload = (await response.json().catch(() => null)) as ApplyResponse | null;
+
+      if (!response.ok || !payload || !payload.ok) {
+        setApplyMessage(payload && !payload.ok ? payload.error.message : "Unable to apply changes.");
+        return;
+      }
+
+      const nextReport = payload.data;
+      setApplyReport(nextReport);
+
+      const failedIds = nextReport.results
+        .filter((item) => item.status === "failed")
+        .map((item) => item.operationId);
+
+      if (failedIds.length > 0) {
+        setFailedOperationIds(new Set(failedIds));
+        setApplyMessage("Some operations failed. Review the report and retry failed items.");
+        return;
+      }
+
+      setFailedOperationIds(null);
+      setApplyMessage("Changes applied successfully. Snapshot refreshed.");
+      setRefreshKey((value) => value + 1);
+    } finally {
+      setIsApplying(false);
+    }
+  };
 
   if (isLoading) {
     return <div className="h-24 animate-pulse rounded-md bg-muted" />;
@@ -94,10 +158,59 @@ export function EditorSnapshotLoader({ projectId, scopeId }: EditorSnapshotLoade
           <p className="text-sm text-muted-foreground">Environment columns: {snapshot.environments.length}</p>
           <p className="text-sm text-muted-foreground">Env records: {snapshot.records.length}</p>
           <p className="text-xs text-muted-foreground">Baseline hash: {snapshot.baselineHash}</p>
-          <EnvMatrixTableShell />
+          {isApplying ? (
+            <p className="rounded-md border border-border bg-muted p-2 text-sm text-muted-foreground">
+              Applying operations. Editing is temporarily disabled.
+            </p>
+          ) : null}
+          {applyMessage ? (
+            <p className="rounded-md border border-border bg-muted p-2 text-sm text-muted-foreground">{applyMessage}</p>
+          ) : null}
+          <EnvMatrixTableShell disabled={isApplying} />
+          {applyReport ? (
+            <section className="space-y-2 rounded-md border border-border p-3" aria-live="polite">
+              <h3 className="text-sm font-semibold">Last apply report</h3>
+              <div className="flex flex-wrap gap-2">
+                <Badge variant="outline" className="status-create">
+                  Done {applyReport.results.filter((item) => item.status === "done").length}
+                </Badge>
+                <Badge variant="outline" className="status-delete">
+                  Failed {applyReport.results.filter((item) => item.status === "failed").length}
+                </Badge>
+                <Badge variant="outline" className="status-update">
+                  Skipped {applyReport.results.filter((item) => item.status === "skipped").length}
+                </Badge>
+              </div>
+              {(["failed", "done", "skipped"] as const).map((status) => {
+                const items = applyReport.results.filter((item) => item.status === status);
+                if (items.length === 0) {
+                  return null;
+                }
+
+                return (
+                  <div key={status} className="space-y-1">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{status}</p>
+                    {items.map((item) => (
+                      <div key={item.operationId} className="rounded-md border border-border p-2 text-xs">
+                        <p className="font-medium">{item.operationId}</p>
+                        {item.message ? <p className="mt-1 text-muted-foreground">{item.message}</p> : null}
+                        {item.createdId ? <p className="mt-1 text-muted-foreground">Created ID: {item.createdId}</p> : null}
+                      </div>
+                    ))}
+                  </div>
+                );
+              })}
+            </section>
+          ) : null}
         </div>
       }
-      panel={<ChangeOrderPanel />}
+      panel={
+        <ChangeOrderPanel
+          isApplying={isApplying}
+          failedOperationIds={failedOperationIds}
+          onApply={handleApply}
+        />
+      }
     />
   );
 }
