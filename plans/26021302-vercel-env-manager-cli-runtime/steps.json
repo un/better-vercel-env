@@ -411,7 +411,7 @@
         "Authenticated state is tested",
         "Navigation behavior is correct"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 34,
