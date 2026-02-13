@@ -31,43 +31,51 @@ export async function executeCliAddActions(
       continue;
     }
 
-    if (action.actionKind !== "add") {
-      results.push({
-        operationId: action.operationId,
-        actionKind: action.actionKind,
-        status: "skipped",
-        message: "remove_not_implemented_yet",
-      });
-      continue;
-    }
-
-    if (!action.key || !action.environment || action.value === null) {
+    if (!action.key || !action.environment) {
       results.push({
         operationId: action.operationId,
         actionKind: action.actionKind,
         status: "failed",
-        message: "invalid_add_action",
+        message: "invalid_action",
       });
       continue;
     }
 
     try {
-      await runner.run({
-        executable: "vercel",
-        args: [
-          "env",
-          "add",
-          action.key,
-          action.environment,
-          "--scope",
-          input.scope,
-          "--force",
-          "--no-color",
-        ],
-        cwd: input.workspacePath,
-        timeoutMs: 30_000,
-        stdinText: `${action.value}\n`,
-      });
+      if (action.actionKind === "add") {
+        await runner.run({
+          executable: "vercel",
+          args: [
+            "env",
+            "add",
+            action.key,
+            action.environment,
+            "--scope",
+            input.scope,
+            "--force",
+            "--no-color",
+          ],
+          cwd: input.workspacePath,
+          timeoutMs: 30_000,
+          stdinText: `${action.value ?? ""}\n`,
+        });
+      } else {
+        await runner.run({
+          executable: "vercel",
+          args: [
+            "env",
+            "rm",
+            action.key,
+            action.environment,
+            "--scope",
+            input.scope,
+            "-y",
+            "--no-color",
+          ],
+          cwd: input.workspacePath,
+          timeoutMs: 30_000,
+        });
+      }
 
       results.push({
         operationId: action.operationId,

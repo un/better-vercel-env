@@ -303,7 +303,7 @@
         "Per-item status is captured",
         "Failures are actionable"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 25,
