@@ -2,6 +2,11 @@
 
 Use this file as a prepend-only log.
 
+## 2026-02-13 12:12 - Step 10 - shadcn init side effects
+- Context: Initializing shadcn/ui foundation on top of Tailwind v4 setup.
+- Learning: `shadcn init` updates `src/app/globals.css` and installs extra utility dependencies automatically.
+- Impact: Future style/token edits should start from the generated shadcn variables instead of pre-init assumptions.
+
 ## 2026-02-13 12:09 - Step 5 - vitest alias mismatch
 - Context: Adding initial Vitest setup and first sample unit test.
 - Learning: Vitest does not automatically honor Next.js `@/*` path alias with the current minimal config.
