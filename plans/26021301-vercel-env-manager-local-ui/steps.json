@@ -579,7 +579,7 @@
         "Null selection is supported",
         "State remains valid after edits"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 48,

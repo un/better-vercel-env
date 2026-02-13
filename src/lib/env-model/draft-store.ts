@@ -4,6 +4,7 @@ import type { ProjectEnvSnapshot } from "@/lib/types";
 
 import { normalizeSnapshotToDraft } from "./normalize";
 import type { EnvMatrixChange, EnvMatrixDraft } from "./types";
+import type { EnvironmentId } from "@/lib/types";
 
 interface EnvDraftState {
   baseline: EnvMatrixDraft | null;
@@ -18,6 +19,7 @@ interface EnvDraftState {
   addValue: (rowId: string) => void;
   editValue: (rowId: string, valueId: string, content: string) => void;
   removeValue: (rowId: string, valueId: string) => void;
+  setAssignment: (rowId: string, environmentId: EnvironmentId, valueId: string | null) => void;
   reset: () => void;
 }
 
@@ -204,6 +206,37 @@ export const useEnvDraftStore = create<EnvDraftState>((set) => ({
             return {
               ...row,
               values: row.values.filter((value) => value.id !== valueId),
+            };
+          }),
+        },
+      };
+    });
+  },
+  setAssignment: (rowId, environmentId, valueId) => {
+    set((state) => {
+      if (!state.draft) {
+        return state;
+      }
+
+      return {
+        ...state,
+        draft: {
+          ...state.draft,
+          rows: state.draft.rows.map((row) => {
+            if (row.rowId !== rowId) {
+              return row;
+            }
+
+            if (valueId !== null && !row.values.some((value) => value.id === valueId)) {
+              return row;
+            }
+
+            return {
+              ...row,
+              assignments: {
+                ...row.assignments,
+                [environmentId]: valueId,
+              },
             };
           }),
         },
