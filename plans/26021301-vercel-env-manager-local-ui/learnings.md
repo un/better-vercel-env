@@ -2,6 +2,11 @@
 
 Use this file as a prepend-only log.
 
+## 2026-02-13 12:14 - Step 12 - duplicate base applies
+- Context: Refining generated shadcn globals while finalizing Geist typography setup.
+- Learning: The generated `@layer base` block contained duplicate `@apply` lines, which is harmless but noisy.
+- Impact: Clean duplicate utility applies when editing globals to keep diffs readable and avoid confusion.
+
 ## 2026-02-13 12:12 - Step 10 - shadcn init side effects
 - Context: Initializing shadcn/ui foundation on top of Tailwind v4 setup.
 - Learning: `shadcn init` updates `src/app/globals.css` and installs extra utility dependencies automatically.
