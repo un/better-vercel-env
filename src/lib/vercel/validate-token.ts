@@ -1,4 +1,4 @@
-import { Vercel } from "@vercel/sdk";
+import { createVercelClientFromToken } from "@/lib/vercel/client";
 
 interface ValidationSuccess {
   ok: true;
@@ -13,9 +13,7 @@ interface ValidationFailure {
 export type TokenValidationResult = ValidationSuccess | ValidationFailure;
 
 export async function validateVercelToken(token: string): Promise<TokenValidationResult> {
-  const client = new Vercel({
-    bearerToken: token,
-  });
+  const client = createVercelClientFromToken(token);
 
   try {
     const user = await client.user.getAuthUser();

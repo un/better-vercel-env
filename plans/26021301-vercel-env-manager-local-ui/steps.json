@@ -363,7 +363,7 @@
         "All API routes reuse the factory",
         "Error wrapping is consistent"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 30,
