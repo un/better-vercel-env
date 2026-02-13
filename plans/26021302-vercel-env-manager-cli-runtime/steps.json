@@ -315,7 +315,7 @@
         "Report schema is preserved",
         "Drift checks still work"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 26,

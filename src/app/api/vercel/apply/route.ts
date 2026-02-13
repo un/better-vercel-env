@@ -1,9 +1,17 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 
-import { createVercelClientFromRequest, SessionAuthError } from "@/lib/vercel/client";
-import { applyPlannedOperations } from "@/lib/vercel/apply";
-import { loadProjectSnapshot } from "@/lib/vercel/project-snapshot";
+import type { EnvOperation } from "@/lib/env-model";
+import type { ApplyOperationResult, ApplyResultData } from "@/lib/types";
+import {
+  buildCliApplyActions,
+  ensureProjectWorkspace,
+  executeCliAddActions,
+  getVercelCliAuthStatus,
+  linkVercelProjectWorkspace,
+  listVercelTeamScopes,
+  loadProjectSnapshotFromCli,
+} from "@/lib/vercel-cli";
 
 const operationKindSchema = z.enum(["create_env", "update_env", "delete_env", "rename_key", "retarget"]);
 const targetSchema = z.array(z.enum(["production", "preview", "development"]));
@@ -39,6 +47,66 @@ const applyPayloadSchema = z
   })
   .strict();
 
+async function resolveScopeForCli(scopeId: string): Promise<string> {
+  if (scopeId.startsWith("user:")) {
+    return scopeId.replace("user:", "");
+  }
+
+  if (scopeId.startsWith("team:")) {
+    return scopeId.replace("team:", "");
+  }
+
+  const teams = await listVercelTeamScopes();
+  const team = teams.find((item) => item.id === scopeId);
+  return team ? team.slug : scopeId;
+}
+
+function mergeActionResults(operationIds: string[], actionResults: Awaited<ReturnType<typeof executeCliAddActions>>): ApplyResultData {
+  const results: ApplyOperationResult[] = operationIds.map((operationId) => {
+    const perOperation = actionResults.filter((item) => item.operationId === operationId);
+
+    if (perOperation.some((item) => item.status === "failed")) {
+      const message = perOperation
+        .filter((item) => item.message)
+        .map((item) => item.message)
+        .join("; ");
+
+      return {
+        operationId,
+        status: "failed",
+        createdId: null,
+        message: message.length > 0 ? message : "Operation failed.",
+      } satisfies ApplyOperationResult;
+    }
+
+    if (perOperation.every((item) => item.status === "skipped")) {
+      const message = perOperation
+        .filter((item) => item.message)
+        .map((item) => item.message)
+        .join("; ");
+
+      return {
+        operationId,
+        status: "skipped",
+        createdId: null,
+        message: message.length > 0 ? message : "Operation skipped.",
+      } satisfies ApplyOperationResult;
+    }
+
+    return {
+      operationId,
+      status: "done",
+      createdId: null,
+      message: null,
+    } satisfies ApplyOperationResult;
+  });
+
+  return {
+    accepted: operationIds.length,
+    results,
+  };
+}
+
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const body = await request.json().catch(() => null);
   const parsed = applyPayloadSchema.safeParse(body);
@@ -57,9 +125,24 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   try {
-    const client = createVercelClientFromRequest(request);
-    const teamId = parsed.data.scopeId.startsWith("user:") ? undefined : parsed.data.scopeId;
-    const currentSnapshot = await loadProjectSnapshot(client, parsed.data.projectId, teamId);
+    const authStatus = await getVercelCliAuthStatus();
+    if (!authStatus.authenticated) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: {
+            code: "unauthorized",
+            message: authStatus.message,
+          },
+        },
+        { status: 401 },
+      );
+    }
+
+    const currentSnapshot = await loadProjectSnapshotFromCli({
+      projectId: parsed.data.projectId,
+      scopeId: parsed.data.scopeId,
+    });
 
     if (currentSnapshot.baselineHash !== parsed.data.baselineHash) {
       return NextResponse.json(
@@ -74,31 +157,37 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    const result = await applyPlannedOperations({
-      client,
+    const scope = await resolveScopeForCli(parsed.data.scopeId);
+    const workspacePath = await ensureProjectWorkspace({
       projectId: parsed.data.projectId,
-      teamId,
-      operations: parsed.data.operations,
+      scope,
     });
+
+    await linkVercelProjectWorkspace({
+      workspacePath,
+      project: parsed.data.projectId,
+      scope,
+    });
+
+    const actions = buildCliApplyActions(parsed.data.operations as EnvOperation[]);
+    const actionResults = await executeCliAddActions(
+      {
+        workspacePath,
+        scope,
+        actions,
+      },
+    );
+
+    const result = mergeActionResults(
+      parsed.data.operations.map((operation) => operation.id),
+      actionResults,
+    );
 
     return NextResponse.json({
       ok: true,
       data: result,
     });
-  } catch (error) {
-    if (error instanceof SessionAuthError) {
-      return NextResponse.json(
-        {
-          ok: false,
-          error: {
-            code: "unauthorized",
-            message: "Sign in with a valid token first.",
-          },
-        },
-        { status: 401 },
-      );
-    }
-
+  } catch {
     return NextResponse.json(
       {
         ok: false,
