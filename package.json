@@ -2,6 +2,9 @@
   "name": "vercel-better-env",
   "version": "0.1.0",
   "private": true,
+  "bin": {
+    "vercel-better-env": "./bin/vercel-better-env.js"
+  },
   "scripts": {
     "dev": "next dev --hostname 127.0.0.1 --port 6969",
     "build": "next build",

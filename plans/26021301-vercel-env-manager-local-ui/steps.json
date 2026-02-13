@@ -207,7 +207,7 @@
         "Executable file path is valid",
         "Command resolves locally"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 17,
