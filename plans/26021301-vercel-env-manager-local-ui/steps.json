@@ -279,7 +279,7 @@
         "Cookie never contains raw token",
         "Cookie options are secure"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 23,
