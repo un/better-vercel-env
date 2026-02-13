@@ -13,3 +13,4 @@ export * from "./snapshot";
 export * from "./load-project-snapshot";
 export * from "./apply-builder";
 export * from "./apply-executor";
+export * from "./apply-lock";

@@ -4,6 +4,7 @@ import { z } from "zod";
 import type { EnvOperation } from "@/lib/env-model";
 import type { ApplyOperationResult, ApplyResultData } from "@/lib/types";
 import {
+  ApplyLockConflictError,
   buildCliApplyActions,
   ensureProjectWorkspace,
   executeCliAddActions,
@@ -11,6 +12,7 @@ import {
   linkVercelProjectWorkspace,
   listVercelTeamScopes,
   loadProjectSnapshotFromCli,
+  withProjectApplyLock,
 } from "@/lib/vercel-cli";
 
 const operationKindSchema = z.enum(["create_env", "update_env", "delete_env", "rename_key", "retarget"]);
@@ -125,69 +127,84 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   try {
-    const authStatus = await getVercelCliAuthStatus();
-    if (!authStatus.authenticated) {
-      return NextResponse.json(
-        {
-          ok: false,
-          error: {
-            code: "unauthorized",
-            message: authStatus.message,
+    return await withProjectApplyLock(parsed.data.projectId, parsed.data.scopeId, async () => {
+      const authStatus = await getVercelCliAuthStatus();
+      if (!authStatus.authenticated) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error: {
+              code: "unauthorized",
+              message: authStatus.message,
+            },
           },
+          { status: 401 },
+        );
+      }
+
+      const currentSnapshot = await loadProjectSnapshotFromCli({
+        projectId: parsed.data.projectId,
+        scopeId: parsed.data.scopeId,
+      });
+
+      if (currentSnapshot.baselineHash !== parsed.data.baselineHash) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error: {
+              code: "conflict",
+              message: "Baseline changed. Reload the latest snapshot before applying.",
+            },
+          },
+          { status: 409 },
+        );
+      }
+
+      const scope = await resolveScopeForCli(parsed.data.scopeId);
+      const workspacePath = await ensureProjectWorkspace({
+        projectId: parsed.data.projectId,
+        scope,
+      });
+
+      await linkVercelProjectWorkspace({
+        workspacePath,
+        project: parsed.data.projectId,
+        scope,
+      });
+
+      const actions = buildCliApplyActions(parsed.data.operations as EnvOperation[]);
+      const actionResults = await executeCliAddActions(
+        {
+          workspacePath,
+          scope,
+          actions,
         },
-        { status: 401 },
       );
-    }
 
-    const currentSnapshot = await loadProjectSnapshotFromCli({
-      projectId: parsed.data.projectId,
-      scopeId: parsed.data.scopeId,
+      const result = mergeActionResults(
+        parsed.data.operations.map((operation) => operation.id),
+        actionResults,
+      );
+
+      return NextResponse.json({
+        ok: true,
+        data: result,
+      });
     });
-
-    if (currentSnapshot.baselineHash !== parsed.data.baselineHash) {
+  } catch (error) {
+    if (error instanceof ApplyLockConflictError) {
       return NextResponse.json(
         {
           ok: false,
           error: {
             code: "conflict",
-            message: "Baseline changed. Reload the latest snapshot before applying.",
+            message: error.message,
           },
         },
         { status: 409 },
       );
     }
 
-    const scope = await resolveScopeForCli(parsed.data.scopeId);
-    const workspacePath = await ensureProjectWorkspace({
-      projectId: parsed.data.projectId,
-      scope,
-    });
-
-    await linkVercelProjectWorkspace({
-      workspacePath,
-      project: parsed.data.projectId,
-      scope,
-    });
-
-    const actions = buildCliApplyActions(parsed.data.operations as EnvOperation[]);
-    const actionResults = await executeCliAddActions(
-      {
-        workspacePath,
-        scope,
-        actions,
-      },
-    );
-
-    const result = mergeActionResults(
-      parsed.data.operations.map((operation) => operation.id),
-      actionResults,
-    );
-
-    return NextResponse.json({
-      ok: true,
-      data: result,
-    });
-  } catch {
     return NextResponse.json(
       {
         ok: false,

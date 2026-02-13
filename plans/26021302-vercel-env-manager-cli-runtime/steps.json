@@ -327,7 +327,7 @@
         "Lock releases on completion/failure",
         "UI receives clear message"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 27,
