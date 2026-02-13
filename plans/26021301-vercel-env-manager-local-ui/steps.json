@@ -507,7 +507,7 @@
         "Value pool entries are generated",
         "Assignments are deterministic"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 42,
