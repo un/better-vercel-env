@@ -39,7 +39,7 @@
         "Error shape is standardized",
         "Route handlers can depend on interfaces"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 3,
