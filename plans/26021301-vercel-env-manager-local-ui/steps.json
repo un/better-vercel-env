@@ -603,7 +603,7 @@
         "Validation feedback is visible",
         "Duplicate key conflicts are handled"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 50,

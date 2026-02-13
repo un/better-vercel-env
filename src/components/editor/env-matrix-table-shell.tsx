@@ -4,9 +4,20 @@ import { useEnvDraftStore } from "@/lib/env-model";
 
 export function EnvMatrixTableShell() {
   const draft = useEnvDraftStore((state) => state.draft);
+  const renameRowKey = useEnvDraftStore((state) => state.renameRowKey);
 
   const rows = draft?.rows ?? [];
   const environments = draft?.environments ?? [];
+
+  const keyCounts = rows.reduce<Map<string, number>>((result, row) => {
+    const normalized = row.key.trim().toLowerCase();
+    if (!normalized) {
+      return result;
+    }
+
+    result.set(normalized, (result.get(normalized) ?? 0) + 1);
+    return result;
+  }, new Map());
 
   return (
     <div className="overflow-x-auto rounded-lg border border-border bg-card">
@@ -30,7 +41,24 @@ export function EnvMatrixTableShell() {
 
             return (
               <tr key={row.rowId} className="border-b border-border last:border-0">
-                <td className="px-3 py-2 align-top font-medium">{row.key}</td>
+                <td className="px-3 py-2 align-top">
+                  <input
+                    className={`w-full rounded-md border px-2 py-1 text-sm ${
+                      !row.key.trim() || (keyCounts.get(row.key.trim().toLowerCase()) ?? 0) > 1
+                        ? "border-destructive"
+                        : "border-border"
+                    }`}
+                    value={row.key}
+                    onChange={(event) => renameRowKey(row.rowId, event.target.value)}
+                    aria-label={`Key for row ${row.rowId}`}
+                  />
+                  {!row.key.trim() ? (
+                    <p className="mt-1 text-xs text-destructive">Key is required.</p>
+                  ) : null}
+                  {(keyCounts.get(row.key.trim().toLowerCase()) ?? 0) > 1 ? (
+                    <p className="mt-1 text-xs text-destructive">Duplicate key. Use a unique key name.</p>
+                  ) : null}
+                </td>
                 <td className="px-3 py-2 align-top text-muted-foreground">
                   {row.values.map((value, index) => (
                     <div key={value.id}>{`Value ${index + 1}: ${value.content || "(empty)"}`}</div>
