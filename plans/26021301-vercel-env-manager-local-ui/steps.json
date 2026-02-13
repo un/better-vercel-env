@@ -675,7 +675,7 @@
         "Schema supports reporting",
         "Schema supports undo mapping"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 56,
