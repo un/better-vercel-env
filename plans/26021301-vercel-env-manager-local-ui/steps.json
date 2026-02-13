@@ -75,7 +75,7 @@
         "test script exists",
         "A sample test passes"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 6,

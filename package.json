@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "verify": "npm run lint && npm run typecheck"
+    "test": "vitest",
+    "verify": "npm run lint && npm run typecheck && npm run test -- --run"
   },
   "dependencies": {
     "@vercel/sdk": "^1.19.1",
@@ -24,6 +25,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.0.18"
   }
 }

@@ -2,6 +2,11 @@
 
 Use this file as a prepend-only log.
 
+## 2026-02-13 12:09 - Step 5 - vitest alias mismatch
+- Context: Adding initial Vitest setup and first sample unit test.
+- Learning: Vitest does not automatically honor Next.js `@/*` path alias with the current minimal config.
+- Impact: Use relative imports in tests or add explicit alias mapping in `vitest.config.ts` before relying on `@/` imports.
+
 ## 2026-02-13 12:06 - Step 1 - scaffold in non-empty repo
 - Context: Bootstrapping Next.js in a repository that already contained planning files.
 - Learning: `create-next-app` refuses to initialize directly in non-empty directories, so scaffold in a temporary folder and copy project files into root.
