@@ -2,6 +2,11 @@
 
 Use this file as a prepend-only log.
 
+## 2026-02-14 20:21 - Step 19 - Terminal-safe change highlighting
+- Context: Adding changed-row and changed-cell cues in the matrix without color dependencies.
+- Learning: Symbol-based indicators (`!` for changed, `*` for active selection) are reliable across terminals and keep diffs readable even without ANSI styling.
+- Impact: Keep baseline-vs-draft highlighting text-based until palette/theming is formalized.
+
 ## 2026-02-14 20:20 - Step 18 - Assignment edit capability gates
 - Context: Adding terminal controls for set/unset environment assignments.
 - Learning: Assignment edits must share the same lock rules as web parity: block when row has encrypted values, block branch-scoped rows when branch writes are unsupported, and block custom environments when custom writes are unsupported.

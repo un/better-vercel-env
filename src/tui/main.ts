@@ -71,6 +71,7 @@ async function startTuiApp(): Promise<void> {
     replaceRootContent(
       renderer,
       EditorScreen({
+        baseline: state.editor.baseline,
         draft: state.editor.draft,
         scrollOffset: editorScrollOffset,
         selectedRowId: state.editor.draft?.rows[selectedEditorRowIndex]?.rowId ?? null,

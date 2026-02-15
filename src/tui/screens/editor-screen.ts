@@ -3,6 +3,7 @@ import { Box, Text } from "@opentui/core";
 import type { EnvMatrixDraft } from "@/lib/env-model";
 
 export interface EditorScreenModel {
+  baseline: EnvMatrixDraft | null;
   draft: EnvMatrixDraft | null;
   scrollOffset: number;
   selectedRowId: string | null;
@@ -26,8 +27,20 @@ function assignmentLabel(valueId: string | null, row: EnvMatrixDraft["rows"][num
   return `V${index + 1}`;
 }
 
+function valuePoolFingerprint(row: EnvMatrixDraft["rows"][number]): string {
+  return JSON.stringify(
+    row.values.map((value) => ({
+      id: value.id,
+      content: value.content,
+      type: value.type,
+      gitBranch: value.gitBranch,
+    })),
+  );
+}
+
 function rowLine(
   row: EnvMatrixDraft["rows"][number],
+  baselineRow: EnvMatrixDraft["rows"][number] | null,
   environments: EnvMatrixDraft["environments"],
   selectedRowId: string | null,
   selectedValueId: string | null,
@@ -39,21 +52,25 @@ function rowLine(
       return `V${index + 1}${marker}:${value.content}`;
     })
     .join(" | ");
+  const keyChanged = !baselineRow || baselineRow.key !== row.key;
+  const valuesChanged = !baselineRow || valuePoolFingerprint(baselineRow) !== valuePoolFingerprint(row);
   const assignments = environments
     .map((environment) => {
       const selected = environment.id === selectedEnvironmentId && row.rowId === selectedRowId ? "*" : "";
+      const changed = !baselineRow || baselineRow.assignments[environment.id] !== row.assignments[environment.id];
       const label = assignmentLabel(row.assignments[environment.id], row);
-      return `${selected}${environment.name}:${label}`;
+      return `${selected}${changed ? "!" : ""}${environment.name}:${label}`;
     })
     .join(" ");
 
-  const marker = row.rowId === selectedRowId ? ">" : " ";
-  return `${marker} ${row.key} | ${values || "-"} | ${assignments}`;
+  const marker = row.rowId === selectedRowId ? ">" : keyChanged || valuesChanged ? "!" : " ";
+  return `${marker} ${keyChanged ? `!${row.key}` : row.key} | ${valuesChanged ? `!${values || "-"}` : values || "-"} | ${assignments}`;
 }
 
 export function EditorScreen(model: EditorScreenModel) {
   const rows = model.draft?.rows ?? [];
   const environments = model.draft?.environments ?? [];
+  const baselineRowsById = new Map((model.baseline?.rows ?? []).map((row) => [row.rowId, row]));
   const pageSize = 10;
   const safeOffset = Math.max(0, Math.min(model.scrollOffset, Math.max(0, rows.length - pageSize)));
   const visibleRows = rows.slice(safeOffset, safeOffset + pageSize);
@@ -74,12 +91,20 @@ export function EditorScreen(model: EditorScreenModel) {
         visibleRows.length > 0
           ? visibleRows
               .map((row) =>
-                rowLine(row, environments, model.selectedRowId, model.selectedValueId, model.selectedEnvironmentId),
+                rowLine(
+                  row,
+                  baselineRowsById.get(row.rowId) ?? null,
+                  environments,
+                  model.selectedRowId,
+                  model.selectedValueId,
+                  model.selectedEnvironmentId,
+                ),
               )
               .join("\n")
           : "No rows",
     }),
     Text({ content: `Rows ${safeOffset + 1}-${Math.min(safeOffset + pageSize, rows.length)} of ${rows.length}` }),
+    Text({ content: "Legend: ! changed, * active selection" }),
     Text({ content: `Status: ${model.statusMessage}` }),
     Text({
       content:
