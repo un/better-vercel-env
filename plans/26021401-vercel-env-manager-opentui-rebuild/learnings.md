@@ -2,6 +2,11 @@
 
 Use this file as a prepend-only log.
 
+## 2026-02-14 23:40 - Step 40 - Keep final release checklist evidence in plan folder
+- Context: Running final verify/build/manual parity walkthrough for release readiness.
+- Learning: Final sign-off is clearer when command outcomes, smoke scope/project identity, and remaining caveats are captured in a dedicated release-checklist artifact.
+- Impact: Preserve a per-plan final checklist document for future release audits and parity regressions.
+
 ## 2026-02-14 20:46 - Step 39 - README must match runtime command and dependency reality
 - Context: Rewriting docs from web-hosted flow to terminal-first OpenTUI flow.
 - Learning: Docs must explicitly mention Bun requirement and `npm run tui`/bin entry usage to prevent stale Next-era onboarding confusion.

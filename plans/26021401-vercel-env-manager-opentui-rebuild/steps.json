@@ -495,7 +495,7 @@
         "Manual parity checklist passes",
         "Final risks/caveats are documented"
       ],
-      "completed": false
+      "completed": true
     }
   ]
 }
