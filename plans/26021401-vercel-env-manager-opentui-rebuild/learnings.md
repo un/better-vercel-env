@@ -2,6 +2,11 @@
 
 Use this file as a prepend-only log.
 
+## 2026-02-14 20:35 - Step 30 - Defend reserved-key policy at editor ingress and key edits
+- Context: Ensuring reserved runtime env keys stay hidden and non-applicable in TUI.
+- Learning: Filtering reserved keys only in apply path is not enough; snapshot ingest and key-rename interactions should also enforce the same policy.
+- Impact: Keep reserved-key checks in snapshot normalization boundary, rename validation, and apply action building.
+
 ## 2026-02-14 20:34 - Step 29 - Retry set should default to failed operation IDs
 - Context: Preserving draft context after partial apply failures.
 - Learning: Keep a failed-operation ID set and retry that subset by default so already successful operations are not re-submitted unnecessarily.

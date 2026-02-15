@@ -375,7 +375,7 @@
         "Reserved key operations are skipped",
         "Policy docs remain accurate"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 31,

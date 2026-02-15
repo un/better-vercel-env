@@ -4,7 +4,7 @@ import { pathToFileURL } from "node:url";
 import { getVercelCliAuthStatus } from "@/lib/vercel-cli";
 import { normalizeSnapshotToDraft, type EnvMatrixDraft } from "@/lib/env-model";
 import { APPLY_CONFIRM_PHRASE, isApplyConfirmPhraseValid } from "@/components/editor/confirm-gate";
-import { ApplyLockConflictError } from "@/lib/vercel-cli";
+import { ApplyLockConflictError, isReservedRuntimeEnvKey } from "@/lib/vercel-cli";
 
 import { loadProjectsFromCli } from "./data/projects";
 import { BaselineConflictError, executeApplyForSelection } from "./data/apply";
@@ -133,6 +133,17 @@ async function startTuiApp(): Promise<void> {
         failedOperationIds: state.editor.failedOperationIds.filter((id) => pendingIds.has(id)),
       },
     });
+  };
+
+  const filterReservedRows = (draft: EnvMatrixDraft): { draft: EnvMatrixDraft; removedCount: number } => {
+    const rows = draft.rows.filter((row) => !isReservedRuntimeEnvKey(row.key));
+    return {
+      draft: {
+        ...draft,
+        rows,
+      },
+      removedCount: draft.rows.length - rows.length,
+    };
   };
 
   const getApplyOperations = () => {
@@ -284,12 +295,13 @@ async function startTuiApp(): Promise<void> {
     try {
       const snapshot = await loadSnapshotForSelection(state.selection.projectId, state.selection.scopeId);
       const normalized = normalizeSnapshotToDraft(snapshot);
+      const filtered = filterReservedRows(normalized);
       store.patchState({
         editor: {
           ...state.editor,
           snapshot,
-          baseline: normalized,
-          draft: structuredClone(normalized),
+          baseline: filtered.draft,
+          draft: structuredClone(filtered.draft),
           pendingOperations: [],
         },
       });
@@ -301,7 +313,11 @@ async function startTuiApp(): Promise<void> {
       valueEditBuffer = null;
       confirmInput = "";
       store.transitionTo("editor");
-      setStatusMessage("Snapshot loaded.");
+      setStatusMessage(
+        filtered.removedCount > 0
+          ? `Snapshot loaded. Filtered ${filtered.removedCount} reserved runtime key row(s).`
+          : "Snapshot loaded.",
+      );
     } catch (error) {
       setStatusMessage(null, error instanceof Error ? error.message : "Unable to load project snapshot.");
     }
@@ -417,14 +433,15 @@ async function startTuiApp(): Promise<void> {
         try {
           const snapshot = await loadSnapshotForSelection(state.selection.projectId, state.selection.scopeId);
           const normalized = normalizeSnapshotToDraft(snapshot);
+          const filtered = filterReservedRows(normalized);
           const currentState = store.getState();
 
           store.patchState({
             editor: {
               ...currentState.editor,
               snapshot,
-              baseline: normalized,
-              draft: structuredClone(normalized),
+              baseline: filtered.draft,
+              draft: structuredClone(filtered.draft),
               pendingOperations: [],
               failedOperationIds: [],
             },
@@ -526,6 +543,13 @@ async function startTuiApp(): Promise<void> {
       const conflict = rows.some((row, index) => index !== selectedEditorRowIndex && row.key === nextKey);
       if (conflict) {
         setStatusMessage(`Key ${nextKey} already exists.`);
+        keyEditBuffer = null;
+        renderCurrentScreen();
+        return;
+      }
+
+      if (isReservedRuntimeEnvKey(nextKey)) {
+        setStatusMessage(`Key ${nextKey} is reserved and cannot be edited.`);
         keyEditBuffer = null;
         renderCurrentScreen();
         return;
