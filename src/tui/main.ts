@@ -9,6 +9,7 @@ import { loadScopesFromCli } from "./data/scopes";
 import { loadSnapshotForSelection } from "./data/snapshot";
 import { canEditAssignment, setRowAssignment, type AssignmentBlockReason } from "./editor/assignments";
 import { computePendingOperations } from "./editor/planning";
+import { undoRowDraftChange } from "./editor/undo";
 import { addValueToDraft, editValueInDraft, removeValueFromDraft } from "./editor/value-pool";
 import { handleGlobalKeySequence } from "./keyboard/global-keys";
 import { registerRendererLifecycle } from "./lifecycle";
@@ -679,6 +680,28 @@ async function startTuiApp(): Promise<void> {
       return true;
     }
 
+    if (sequence === "z" || sequence === "Z") {
+      const selectedRow = rows[selectedEditorRowIndex];
+      if (!draft || !state.editor.baseline || !selectedRow) {
+        return true;
+      }
+
+      const result = undoRowDraftChange(state.editor.baseline, draft, selectedRow.rowId);
+      if (!result.changed) {
+        setStatusMessage(`No pending edits for ${selectedRow.key}.`);
+        renderCurrentScreen();
+        return true;
+      }
+
+      patchEditorDraft(result.draft);
+      selectedEditorRowIndex = Math.min(selectedEditorRowIndex, Math.max(0, result.draft.rows.length - 1));
+      normalizeSelectedValueIndex();
+      normalizeSelectedEnvironmentIndex();
+      setStatusMessage(`Undid edits for ${selectedRow.key}.`);
+      renderCurrentScreen();
+      return true;
+    }
+
     return false;
   });
 
@@ -690,7 +713,7 @@ async function startTuiApp(): Promise<void> {
         process.exit(0);
       },
       onHelp: () => {
-        process.stderr.write("Keys: q quit, r refresh auth, tab scope, j/k project, enter continue, h/l value, [/ ] env, a add, v edit, x delete, s set, u unset\n");
+        process.stderr.write("Keys: q quit, r refresh auth, tab scope, j/k project, enter continue, h/l value, [/ ] env, a add, v edit, x delete, s set, u unset, z undo row\n");
       },
       onRefresh: () => {
         void refreshAuthStatus();

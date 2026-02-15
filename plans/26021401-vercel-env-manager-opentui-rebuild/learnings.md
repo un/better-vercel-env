@@ -2,6 +2,11 @@
 
 Use this file as a prepend-only log.
 
+## 2026-02-14 20:26 - Step 22 - Undo must normalize cursor indices
+- Context: Wiring row-level undo to restore baseline rows or remove draft-only rows.
+- Learning: After undo removes or reshapes a row, selection indices (row/value/environment) must be clamped immediately to avoid stale cursor references.
+- Impact: Always normalize editor indices after any undo mutation before re-rendering.
+
 ## 2026-02-14 20:25 - Step 21 - Keep testable UI formatters decoupled from OpenTUI
 - Context: Adding change-log formatting tests for latest-first ordering and empty state copy.
 - Learning: Helper functions imported by Vitest should live in modules that do not import `@opentui/core`; otherwise Node test runtime can fail on Bun-specific dependencies.

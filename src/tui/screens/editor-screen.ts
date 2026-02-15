@@ -116,9 +116,9 @@ export function EditorScreen(model: EditorScreenModel) {
       content:
         model.keyEditBuffer !== null
           ? `Editing key: ${model.keyEditBuffer}`
-          : model.valueEditBuffer !== null
-            ? `Editing value: ${model.valueEditBuffer}`
-            : "Keys: j/k row, h/l value, [/ ] env, e key, a add value, v edit value, x delete value, s set, u unset, q quit",
+            : model.valueEditBuffer !== null
+              ? `Editing value: ${model.valueEditBuffer}`
+            : "Keys: j/k row, h/l value, [/ ] env, e key, a add value, v edit value, x delete value, s set, u unset, z undo row, q quit",
     }),
   );
 }

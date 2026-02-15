@@ -279,7 +279,7 @@
         "Operation list updates instantly",
         "No corrupted state after repeated undo"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 23,
