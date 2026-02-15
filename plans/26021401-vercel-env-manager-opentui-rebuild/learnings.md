@@ -2,6 +2,11 @@
 
 Use this file as a prepend-only log.
 
+## 2026-02-14 20:38 - Step 32 - Guard multiline stdin parity explicitly in tests
+- Context: Verifying CLI add writes do not mutate values with extra newline artifacts.
+- Learning: A dedicated multiline stdin regression test is needed; single-line assertions alone can miss accidental newline appends.
+- Impact: Keep at least one apply-executor test that asserts exact multiline stdin passthrough.
+
 ## 2026-02-14 20:37 - Step 31 - Add split-topology regression fixture near TUI data path
 - Context: Guarding against accidental IN_ALL-style target collapsing after TUI integration changes.
 - Learning: A focused topology parity test at the TUI data boundary catches regressions even when core normalize/planner tests still pass independently.

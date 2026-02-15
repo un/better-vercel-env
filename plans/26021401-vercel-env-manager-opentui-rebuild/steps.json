@@ -399,7 +399,7 @@
         "Secrets are redacted in errors",
         "Smoke test confirms raw value parity"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 33,

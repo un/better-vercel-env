@@ -89,4 +89,34 @@ describe("executeCliAddActions", () => {
       },
     ]);
   });
+
+  it("passes stdin value verbatim without appending newline", async () => {
+    const calls: Array<{ stdinText?: string }> = [];
+    const runner = {
+      run: vi.fn(async (command: { stdinText?: string }) => {
+        calls.push({ stdinText: command.stdinText });
+        return { exitCode: 0, stdout: "", stderr: "", timedOut: false };
+      }),
+    };
+
+    await executeCliAddActions(
+      {
+        workspacePath: "/tmp/workspace",
+        scope: null,
+        actions: [
+          {
+            operationId: "op-stdin",
+            actionKind: "add",
+            key: "MULTILINE",
+            environment: "development",
+            value: "line-1\nline-2",
+            reason: null,
+          },
+        ],
+      },
+      runner as never,
+    );
+
+    expect(calls[0]?.stdinText).toBe("line-1\nline-2");
+  });
 });
