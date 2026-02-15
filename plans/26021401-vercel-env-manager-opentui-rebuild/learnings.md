@@ -2,6 +2,11 @@
 
 Use this file as a prepend-only log.
 
+## 2026-02-14 20:45 - Step 38 - Include explicit cleanup verification in manual smoke docs
+- Context: Writing reproducible manual smoke flow for `wiggy`.
+- Learning: Smoke docs must include both external verification commands and a full cleanup pass to avoid leaving residual test keys.
+- Impact: Keep add/verify/remove/verify cycle mandatory in release smoke checklists.
+
 ## 2026-02-14 20:44 - Step 37 - Cover screen hint resolver as part of rebuild regression suite
 - Context: Expanding TUI-focused tests beyond core env-model coverage.
 - Learning: Small pure helpers (like context hint mapping) are cheap to test and prevent UI-state drift during rapid keymap changes.

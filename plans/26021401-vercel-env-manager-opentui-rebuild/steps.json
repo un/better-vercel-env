@@ -471,7 +471,7 @@
         "Covers auth/read/write/report flows",
         "Cleanup steps are explicit"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 39,
