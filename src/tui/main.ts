@@ -3,6 +3,7 @@ import { pathToFileURL } from "node:url";
 
 import { getVercelCliAuthStatus } from "@/lib/vercel-cli";
 
+import { loadProjectsFromCli } from "./data/projects";
 import { loadScopesFromCli } from "./data/scopes";
 import { handleGlobalKeySequence } from "./keyboard/global-keys";
 import { registerRendererLifecycle } from "./lifecycle";
@@ -62,7 +63,16 @@ async function startTuiApp(): Promise<void> {
             projectId: null,
           },
         });
-        authScreenModel.message = `CLI session active. Loaded ${scopes.length} scope${scopes.length === 1 ? "" : "s"}.`;
+
+        if (scopes[0]?.id) {
+          const projects = await loadProjectsFromCli(scopes[0].id, "");
+          store.patchState({
+            projects,
+          });
+          authScreenModel.message = `CLI session active. Loaded ${scopes.length} scope${scopes.length === 1 ? "" : "s"} and ${projects.length} project${projects.length === 1 ? "" : "s"}.`;
+        } else {
+          authScreenModel.message = `CLI session active. Loaded ${scopes.length} scope${scopes.length === 1 ? "" : "s"}.`;
+        }
       } catch (error) {
         authScreenModel.error = error instanceof Error ? error.message : "Unable to load scopes.";
       }
