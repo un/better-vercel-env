@@ -2,6 +2,11 @@
 
 Use this file as a prepend-only log.
 
+## 2026-02-14 20:32 - Step 27 - Keep report grouping formatter pure and testable
+- Context: Rendering grouped done/failed/skipped apply results in TUI report view.
+- Learning: Extracting report grouping/line formatting to a pure helper keeps status semantics testable without OpenTUI runtime coupling.
+- Impact: Add formatter tests for grouped statuses and failure reason visibility whenever report shape changes.
+
 ## 2026-02-14 20:32 - Step 26 - Scope-aware apply lock key
 - Context: Enforcing single in-flight apply for a project/scope context.
 - Learning: Apply lock must key on both `projectId` and `scopeId`; project-only locks can block unrelated scope operations and scope-only locks can allow conflicting project writes.

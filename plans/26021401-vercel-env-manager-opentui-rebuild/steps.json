@@ -339,7 +339,7 @@
         "Failed reasons are readable",
         "Report updates per apply run"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 28,

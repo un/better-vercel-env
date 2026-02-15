@@ -2,14 +2,15 @@ import { Box, Text } from "@opentui/core";
 
 import type { ApplyResultData } from "@/lib/types";
 
+import { formatApplyReportLines } from "./report-format";
+
 export interface ReportScreenModel {
   report: ApplyResultData | null;
   statusMessage: string;
 }
 
 export function ReportScreen(model: ReportScreenModel) {
-  const accepted = model.report?.accepted ?? 0;
-  const results = model.report?.results ?? [];
+  const lines = formatApplyReportLines(model.report);
 
   return Box(
     {
@@ -21,8 +22,7 @@ export function ReportScreen(model: ReportScreenModel) {
       borderStyle: "rounded",
     },
     Text({ content: "Apply Report" }),
-    Text({ content: `Accepted operations: ${accepted}` }),
-    Text({ content: `Result entries: ${results.length}` }),
+    Text({ content: lines.join("\n") }),
     Text({ content: `Status: ${model.statusMessage}` }),
     Text({ content: "Keys: Enter return to editor, q quit" }),
   );
