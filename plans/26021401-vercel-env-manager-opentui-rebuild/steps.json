@@ -183,7 +183,7 @@
         "Baseline hash is retained",
         "No phantom changes on initial load"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 15,

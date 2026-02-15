@@ -2,6 +2,7 @@ import { Box, Text, createCliRenderer } from "@opentui/core";
 import { pathToFileURL } from "node:url";
 
 import { getVercelCliAuthStatus } from "@/lib/vercel-cli";
+import { normalizeSnapshotToDraft } from "@/lib/env-model";
 
 import { loadProjectsFromCli } from "./data/projects";
 import { loadScopesFromCli } from "./data/scopes";
@@ -71,6 +72,7 @@ async function startTuiApp(): Promise<void> {
         Text({ content: "Editor placeholder" }),
         Text({ content: `Project: ${state.selection.projectId ?? "-"}` }),
         Text({ content: `Snapshot rows: ${state.editor.snapshot?.records.length ?? 0}` }),
+        Text({ content: `Baseline hash: ${state.editor.draft?.baselineHash ?? "-"}` }),
         Text({ content: `Status: ${state.status.message ?? "-"}` }),
       ),
     );
@@ -172,10 +174,13 @@ async function startTuiApp(): Promise<void> {
 
     try {
       const snapshot = await loadSnapshotForSelection(state.selection.projectId, state.selection.scopeId);
+      const normalized = normalizeSnapshotToDraft(snapshot);
       store.patchState({
         editor: {
           ...state.editor,
           snapshot,
+          baseline: normalized,
+          draft: structuredClone(normalized),
         },
       });
       store.transitionTo("editor");
