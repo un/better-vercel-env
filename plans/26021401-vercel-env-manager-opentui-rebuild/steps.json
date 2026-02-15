@@ -459,7 +459,7 @@
         "State transition tests exist",
         "Core domain regression tests still pass"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 38,

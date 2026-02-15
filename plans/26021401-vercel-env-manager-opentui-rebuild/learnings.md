@@ -2,6 +2,11 @@
 
 Use this file as a prepend-only log.
 
+## 2026-02-14 20:44 - Step 37 - Cover screen hint resolver as part of rebuild regression suite
+- Context: Expanding TUI-focused tests beyond core env-model coverage.
+- Learning: Small pure helpers (like context hint mapping) are cheap to test and prevent UI-state drift during rapid keymap changes.
+- Impact: Keep adding low-cost tests around TUI glue logic, not just domain planner modules.
+
 ## 2026-02-14 20:43 - Step 36 - Bin should fail fast with Bun-specific guidance
 - Context: Repointing CLI scripts/bin from Next server launch to OpenTUI runtime.
 - Learning: The bin entry should detect missing Bun and return an actionable install message, since OpenTUI runtime path is Bun-backed.
