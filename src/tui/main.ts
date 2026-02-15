@@ -1,14 +1,58 @@
-import { Box, Text, createCliRenderer } from "@opentui/core";
+import { createCliRenderer } from "@opentui/core";
 import { pathToFileURL } from "node:url";
+
+import { getVercelCliAuthStatus } from "@/lib/vercel-cli";
 
 import { handleGlobalKeySequence } from "./keyboard/global-keys";
 import { registerRendererLifecycle } from "./lifecycle";
+import { AuthScreen, type AuthScreenModel } from "./screens/auth-screen";
+
+function replaceRootContent(renderer: Awaited<ReturnType<typeof createCliRenderer>>, content: unknown): void {
+  const existingChildren = [...renderer.root.getChildren()];
+  existingChildren.forEach((child) => {
+    renderer.root.remove(child.id);
+  });
+  renderer.root.add(content);
+}
 
 async function startTuiApp(): Promise<void> {
   const renderer = await createCliRenderer({
     exitOnCtrlC: true,
   });
   const lifecycle = registerRendererLifecycle(renderer);
+
+  const authScreenModel: AuthScreenModel = {
+    loading: true,
+    authenticated: false,
+    username: null,
+    activeScope: null,
+    message: "Checking Vercel CLI authentication...",
+    error: null,
+  };
+
+  const renderAuth = () => {
+    replaceRootContent(renderer, AuthScreen(authScreenModel));
+  };
+
+  const refreshAuthStatus = async () => {
+    authScreenModel.loading = true;
+    authScreenModel.error = null;
+    authScreenModel.message = "Refreshing CLI authentication status...";
+    renderAuth();
+
+    const status = await getVercelCliAuthStatus();
+
+    authScreenModel.loading = false;
+    authScreenModel.authenticated = status.authenticated;
+    authScreenModel.username = status.identity?.username ?? null;
+    authScreenModel.activeScope = status.identity?.activeScope ?? null;
+    authScreenModel.message = status.message;
+    authScreenModel.error = null;
+
+    renderAuth();
+  };
+
+  renderAuth();
 
   renderer.addInputHandler((sequence) => {
     return handleGlobalKeySequence(sequence, {
@@ -18,26 +62,16 @@ async function startTuiApp(): Promise<void> {
         process.exit(0);
       },
       onHelp: () => {
-        process.stderr.write("Keys: q quit, r refresh, ? help\n");
+        process.stderr.write("Keys: q quit, r refresh auth status, ? help\n");
       },
       onRefresh: () => {
-        process.stderr.write("Refresh requested\n");
+        void refreshAuthStatus();
       },
       isTextInputMode: () => false,
     });
   });
 
-  renderer.root.add(
-    Box(
-      {
-        borderStyle: "rounded",
-        padding: 1,
-        flexDirection: "column",
-      },
-      Text({ content: "Better Vercel Env" }),
-      Text({ content: "OpenTUI runtime is initialized." }),
-    ),
-  );
+  await refreshAuthStatus();
 
   if (process.env.VBE_TUI_SMOKE === "1") {
     lifecycle.shutdown("smoke");
