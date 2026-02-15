@@ -327,7 +327,7 @@
         "Lock is released reliably",
         "Conflict response is clear"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 27,

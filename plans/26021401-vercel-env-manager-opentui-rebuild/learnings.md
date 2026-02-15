@@ -2,6 +2,11 @@
 
 Use this file as a prepend-only log.
 
+## 2026-02-14 20:32 - Step 26 - Scope-aware apply lock key
+- Context: Enforcing single in-flight apply for a project/scope context.
+- Learning: Apply lock must key on both `projectId` and `scopeId`; project-only locks can block unrelated scope operations and scope-only locks can allow conflicting project writes.
+- Impact: Keep lock acquisition at apply orchestration entry with project+scope identity.
+
 ## 2026-02-14 20:31 - Step 25 - Hash revalidation must happen before action build execution
 - Context: Adding baseline conflict protection in the TUI apply path.
 - Learning: Reloading snapshot hash at apply time and comparing to the loaded baseline must run before any CLI write action executes.

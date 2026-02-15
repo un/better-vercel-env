@@ -4,6 +4,7 @@ import { pathToFileURL } from "node:url";
 import { getVercelCliAuthStatus } from "@/lib/vercel-cli";
 import { normalizeSnapshotToDraft, type EnvMatrixDraft } from "@/lib/env-model";
 import { APPLY_CONFIRM_PHRASE, isApplyConfirmPhraseValid } from "@/components/editor/confirm-gate";
+import { ApplyLockConflictError } from "@/lib/vercel-cli";
 
 import { loadProjectsFromCli } from "./data/projects";
 import { BaselineConflictError, executeApplyForSelection } from "./data/apply";
@@ -379,7 +380,7 @@ async function startTuiApp(): Promise<void> {
       store.transitionTo("report");
       setStatusMessage("Apply finished.");
     } catch (error) {
-      if (error instanceof BaselineConflictError) {
+      if (error instanceof ApplyLockConflictError || error instanceof BaselineConflictError) {
         setStatusMessage(error.message);
       } else {
         setStatusMessage(null, error instanceof Error ? error.message : "Apply failed.");
