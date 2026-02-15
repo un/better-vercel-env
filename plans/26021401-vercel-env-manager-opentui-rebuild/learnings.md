@@ -2,6 +2,11 @@
 
 Use this file as a prepend-only log.
 
+## 2026-02-14 20:34 - Step 29 - Retry set should default to failed operation IDs
+- Context: Preserving draft context after partial apply failures.
+- Learning: Keep a failed-operation ID set and retry that subset by default so already successful operations are not re-submitted unnecessarily.
+- Impact: Maintain `failedOperationIds` alongside pending operations and intersect on subsequent draft recomputations.
+
 ## 2026-02-14 20:33 - Step 28 - Refresh only on fully successful apply runs
 - Context: Auto-reloading snapshot and resetting draft after apply.
 - Learning: Snapshot refresh/reset should run only when no apply results are failed; otherwise retain current draft for correction and retry.

@@ -83,7 +83,7 @@ async function startTuiApp(): Promise<void> {
           expectedPhrase: APPLY_CONFIRM_PHRASE,
           input: confirmInput,
           ready: isApplyConfirmPhraseValid(confirmInput),
-          pendingOperationCount: state.editor.pendingOperations.length,
+          pendingOperationCount: getApplyOperations().length,
           statusMessage: state.status.message ?? "Confirm to continue",
         }),
       );
@@ -122,13 +122,28 @@ async function startTuiApp(): Promise<void> {
 
   const patchEditorDraft = (nextDraft: EnvMatrixDraft) => {
     const state = store.getState();
+    const pendingOperations = computePendingOperations(state.editor.baseline, nextDraft);
+    const pendingIds = new Set(pendingOperations.map((operation) => operation.id));
+
     store.patchState({
       editor: {
         ...state.editor,
         draft: nextDraft,
-        pendingOperations: computePendingOperations(state.editor.baseline, nextDraft),
+        pendingOperations,
+        failedOperationIds: state.editor.failedOperationIds.filter((id) => pendingIds.has(id)),
       },
     });
+  };
+
+  const getApplyOperations = () => {
+    const state = store.getState();
+    const failedIds = new Set(state.editor.failedOperationIds);
+
+    if (failedIds.size === 0) {
+      return state.editor.pendingOperations;
+    }
+
+    return state.editor.pendingOperations.filter((operation) => failedIds.has(operation.id));
   };
 
   const selectedEditorRow = () => {
@@ -365,7 +380,8 @@ async function startTuiApp(): Promise<void> {
       return;
     }
 
-    setStatusMessage(`Applying ${state.editor.pendingOperations.length} operation(s)...`);
+    const applyOperations = getApplyOperations();
+    setStatusMessage(`Applying ${applyOperations.length} operation(s)...`);
     renderCurrentScreen();
 
     try {
@@ -373,10 +389,25 @@ async function startTuiApp(): Promise<void> {
         projectId: state.selection.projectId,
         scopeId: state.selection.scopeId,
         expectedBaselineHash,
-        operations: state.editor.pendingOperations,
+        operations: applyOperations,
       });
 
-      store.patchState({ applyReport: report });
+      const failedOperationIds = Array.from(
+        new Set(
+          report.results
+            .filter((result) => result.status === "failed")
+            .map((result) => result.operationId),
+        ),
+      );
+
+      const currentState = store.getState();
+      store.patchState({
+        applyReport: report,
+        editor: {
+          ...currentState.editor,
+          failedOperationIds,
+        },
+      });
       const hasFailure = report.results.some((result) => result.status === "failed");
 
       if (!hasFailure) {
@@ -395,6 +426,7 @@ async function startTuiApp(): Promise<void> {
               baseline: normalized,
               draft: structuredClone(normalized),
               pendingOperations: [],
+              failedOperationIds: [],
             },
           });
 
@@ -813,7 +845,8 @@ async function startTuiApp(): Promise<void> {
     }
 
     if (sequence === "p" || sequence === "P") {
-      if (state.editor.pendingOperations.length === 0) {
+      const operationsToApply = getApplyOperations();
+      if (operationsToApply.length === 0) {
         setStatusMessage("No pending operations to apply.");
         renderCurrentScreen();
         return true;
@@ -821,7 +854,11 @@ async function startTuiApp(): Promise<void> {
 
       confirmInput = "";
       store.transitionTo("confirm");
-      setStatusMessage("Type confirmation phrase exactly to continue.");
+      setStatusMessage(
+        state.editor.failedOperationIds.length > 0
+          ? "Retrying failed operations only. Type confirmation phrase exactly to continue."
+          : "Type confirmation phrase exactly to continue.",
+      );
       renderCurrentScreen();
       return true;
     }

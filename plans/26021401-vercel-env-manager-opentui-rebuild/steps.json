@@ -363,7 +363,7 @@
         "User can retry after edits",
         "Successful ops are not retried unnecessarily"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 30,
