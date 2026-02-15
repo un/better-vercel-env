@@ -159,7 +159,7 @@
         "Project selection is possible",
         "Continue action advances state"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 13,

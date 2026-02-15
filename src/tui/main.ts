@@ -1,4 +1,4 @@
-import { createCliRenderer } from "@opentui/core";
+import { Box, Text, createCliRenderer } from "@opentui/core";
 import { pathToFileURL } from "node:url";
 
 import { getVercelCliAuthStatus } from "@/lib/vercel-cli";
@@ -8,6 +8,7 @@ import { loadScopesFromCli } from "./data/scopes";
 import { handleGlobalKeySequence } from "./keyboard/global-keys";
 import { registerRendererLifecycle } from "./lifecycle";
 import { AuthScreen, type AuthScreenModel } from "./screens/auth-screen";
+import { PickerScreen } from "./screens/picker-screen";
 import { createTuiStore } from "./state";
 
 function replaceRootContent(renderer: Awaited<ReturnType<typeof createCliRenderer>>, content: unknown): void {
@@ -34,15 +35,133 @@ async function startTuiApp(): Promise<void> {
     error: null,
   };
 
-  const renderAuth = () => {
-    replaceRootContent(renderer, AuthScreen(authScreenModel));
+  const renderCurrentScreen = () => {
+    const state = store.getState();
+
+    if (state.screen === "auth") {
+      replaceRootContent(renderer, AuthScreen(authScreenModel));
+      return;
+    }
+
+    if (state.screen === "picker") {
+      replaceRootContent(
+        renderer,
+        PickerScreen({
+          scopes: state.scopes,
+          projects: state.projects,
+          activeScopeId: state.selection.scopeId,
+          activeProjectId: state.selection.projectId,
+          statusMessage: state.status.message ?? "Select scope and project",
+        }),
+      );
+      return;
+    }
+
+    replaceRootContent(
+      renderer,
+      Box(
+        {
+          width: "100%",
+          height: "100%",
+          flexDirection: "column",
+          padding: 1,
+          borderStyle: "rounded",
+        },
+        Text({ content: "Editor placeholder" }),
+        Text({ content: "Picker continue action succeeded." }),
+      ),
+    );
+  };
+
+  const setStatusMessage = (message: string | null, error: string | null = null) => {
+    const state = store.getState();
+    store.patchState({
+      status: {
+        ...state.status,
+        message,
+        error,
+      },
+    });
+  };
+
+  const loadProjectsForScope = async (scopeId: string) => {
+    const projects = await loadProjectsFromCli(scopeId, "");
+    const state = store.getState();
+    store.patchState({
+      projects,
+      selection: {
+        ...state.selection,
+        scopeId,
+        projectId: projects[0]?.id ?? null,
+      },
+    });
+  };
+
+  const cycleScope = async (offset: number) => {
+    const state = store.getState();
+    if (state.scopes.length === 0) {
+      return;
+    }
+
+    const currentIndex = Math.max(
+      0,
+      state.scopes.findIndex((scope) => scope.id === state.selection.scopeId),
+    );
+    const nextIndex = (currentIndex + offset + state.scopes.length) % state.scopes.length;
+    const nextScope = state.scopes[nextIndex];
+    if (!nextScope) {
+      return;
+    }
+
+    setStatusMessage(`Loading projects for ${nextScope.slug}...`);
+    renderCurrentScreen();
+
+    try {
+      await loadProjectsForScope(nextScope.id);
+      setStatusMessage(`Loaded projects for ${nextScope.slug}.`);
+    } catch (error) {
+      setStatusMessage(null, error instanceof Error ? error.message : "Unable to load projects for scope.");
+    }
+
+    renderCurrentScreen();
+  };
+
+  const cycleProject = (offset: number) => {
+    const state = store.getState();
+    if (state.projects.length === 0) {
+      return;
+    }
+
+    const currentIndex = Math.max(
+      0,
+      state.projects.findIndex((project) => project.id === state.selection.projectId),
+    );
+    const nextIndex = (currentIndex + offset + state.projects.length) % state.projects.length;
+    const nextProject = state.projects[nextIndex];
+    if (!nextProject) {
+      return;
+    }
+
+    store.patchState({
+      selection: {
+        ...state.selection,
+        projectId: nextProject.id,
+      },
+      status: {
+        ...state.status,
+        message: `Selected project ${nextProject.name}.`,
+      },
+    });
+
+    renderCurrentScreen();
   };
 
   const refreshAuthStatus = async () => {
     authScreenModel.loading = true;
     authScreenModel.error = null;
     authScreenModel.message = "Refreshing CLI authentication status...";
-    renderAuth();
+    store.patchState({ screen: "auth" });
+    renderCurrentScreen();
 
     const status = await getVercelCliAuthStatus();
 
@@ -68,8 +187,18 @@ async function startTuiApp(): Promise<void> {
           const projects = await loadProjectsFromCli(scopes[0].id, "");
           store.patchState({
             projects,
+            screen: "picker",
+            selection: {
+              scopeId: scopes[0].id,
+              projectId: projects[0]?.id ?? null,
+            },
+            status: {
+              loading: false,
+              message: `Loaded ${scopes.length} scope${scopes.length === 1 ? "" : "s"} and ${projects.length} project${projects.length === 1 ? "" : "s"}.`,
+              error: null,
+            },
           });
-          authScreenModel.message = `CLI session active. Loaded ${scopes.length} scope${scopes.length === 1 ? "" : "s"} and ${projects.length} project${projects.length === 1 ? "" : "s"}.`;
+          authScreenModel.message = "CLI session active.";
         } else {
           authScreenModel.message = `CLI session active. Loaded ${scopes.length} scope${scopes.length === 1 ? "" : "s"}.`;
         }
@@ -78,10 +207,45 @@ async function startTuiApp(): Promise<void> {
       }
     }
 
-    renderAuth();
+    renderCurrentScreen();
   };
 
-  renderAuth();
+  renderCurrentScreen();
+
+  renderer.addInputHandler((sequence) => {
+    const state = store.getState();
+    if (state.screen !== "picker") {
+      return false;
+    }
+
+    if (sequence === "\t") {
+      void cycleScope(1);
+      return true;
+    }
+
+    if (sequence === "j" || sequence === "\u001b[B") {
+      cycleProject(1);
+      return true;
+    }
+
+    if (sequence === "k" || sequence === "\u001b[A") {
+      cycleProject(-1);
+      return true;
+    }
+
+    if (sequence === "\r" || sequence === "\n") {
+      if (!state.selection.projectId) {
+        return true;
+      }
+
+      store.transitionTo("editor");
+      setStatusMessage(`Continuing with project ${state.selection.projectId}.`);
+      renderCurrentScreen();
+      return true;
+    }
+
+    return false;
+  });
 
   renderer.addInputHandler((sequence) => {
     return handleGlobalKeySequence(sequence, {
@@ -91,7 +255,7 @@ async function startTuiApp(): Promise<void> {
         process.exit(0);
       },
       onHelp: () => {
-        process.stderr.write("Keys: q quit, r refresh auth status, ? help\n");
+        process.stderr.write("Keys: q quit, r refresh auth, tab scope, j/k project, enter continue\n");
       },
       onRefresh: () => {
         void refreshAuthStatus();
