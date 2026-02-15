@@ -1,17 +1,20 @@
-# Vercel Better Env
+# Vercel Better Env (OpenTUI)
 
-Local-first environment variable editor for Vercel projects.
+Terminal-first environment variable manager for Vercel projects.
 
-## CLI auth setup (required)
+## Requirements
 
-This app uses your local Vercel CLI session. Before opening the UI, run:
+- `vercel` CLI installed and authenticated.
+- Bun installed (runtime for OpenTUI launch path).
+
+## Auth Setup
 
 ```bash
 vercel login
 vercel whoami
 ```
 
-If you work across teams, select scope with:
+If you work across teams:
 
 ```bash
 vercel switch
@@ -25,13 +28,11 @@ vercel switch
 npx vercel-better-env
 ```
 
-The local app starts at `http://127.0.0.1:6969` (or the next available local port if 6969 is occupied).
-
 ### Run from source
 
 ```bash
 npm install
-npm run dev
+npm run tui
 ```
 
 ### Validate locally
@@ -40,37 +41,44 @@ npm run dev
 npm run verify
 ```
 
-## What it does
+## Core Flow
 
-- Uses a key-first matrix editor for environment values and targets.
-- Plans create/update/delete operations before apply.
-- Requires an exact confirmation phrase before apply.
-- Re-validates the baseline hash before writes to detect drift.
-- Reads and writes env vars through Vercel CLI commands (`env pull`, `env add`, `env rm`).
+1. Auth status screen (`vercel whoami` backed).
+2. Scope and project picker.
+3. Matrix editor for keys, value pool, and assignments.
+4. Live change log + per-row undo.
+5. Confirm phrase gate before apply.
+6. Apply report with done/failed/skipped grouping.
 
-## Limitations (v1)
+## Keyboard Controls
 
-- Auth is CLI-managed (`vercel login`), not app-managed cookies/sessions.
-- Pulled `.env` snapshots are temporary and removed after parsing.
-- System environment variables are read-only.
-- Runtime reserved keys (for example `VERCEL_*`) are filtered out from editable rows.
-- Git branch-specific environment variables are read-only when CLI capability is unavailable.
-- Apply execution currently supports `create_env`, `update_env`, and `delete_env`; other operation kinds are reported as skipped.
+- Global: `q` quit, `r` refresh auth, `?` help.
+- Picker: `tab` scope, `j/k` project, `enter` open editor.
+- Editor:
+  - Navigation: `j/k` row, `h/l` value, `[` / `]` environment.
+  - Edits: `e` key, `a` add value, `v` edit value, `x` delete value.
+  - Assignment: `s` set, `u` unset.
+  - Other: `z` undo row, `p` apply.
+- Confirm: type exact phrase, `enter` apply, `esc` cancel.
+- Report: `enter` back to editor.
+
+## Safety Behavior
+
+- Uses Vercel CLI reads/writes (`env pull`, `env add`, `env rm`).
+- Baseline hash is revalidated before writes.
+- In-flight apply lock prevents concurrent applies per project+scope.
+- Reserved runtime keys are hidden and ignored (`VERCEL_*`, `VERCEL`, `NX_DAEMON`, turbo keys).
+- Apply gate requires exact confirm phrase via shared validator.
+
+## Current Limitations
+
+- Custom environment writes are skipped in CLI apply path.
+- Branch-specific writes are capability-gated and may be read-only.
+- Retarget/rename planner kinds outside supported CLI actions are reported as skipped.
 
 ## Troubleshooting
 
-- If onboarding shows unauthenticated, run `vercel login` again, then click refresh in the app.
-- If projects are missing, verify current scope with `vercel whoami` and change it with `vercel switch`.
-- If apply returns conflict, reload the snapshot and re-apply with a fresh baseline hash.
-- If CLI commands fail, ensure `vercel` is installed and available on your `PATH`.
-
-## CLI capability caveats
-
-- Custom environment writes are currently unsupported through the CLI apply path in this app. These operations are marked as skipped with `unsupported_custom_environment`.
-- Branch-specific writes are capability-gated. When unsupported, related rows are read-only in the matrix.
-- Unsupported planner kinds are not silently dropped. They are included in apply results with `status: skipped` and a reason.
-
-## Development notes
-
-- Stack: Next.js App Router, TypeScript, Tailwind, shadcn/ui, Zustand, Zod, Vercel CLI runtime adapter.
-- Default host/port: `127.0.0.1:6969`.
+- Unauthenticated screen: rerun `vercel login`, then press `r` in app.
+- Missing projects: verify scope with `vercel whoami` / `vercel switch`.
+- Apply conflict: reload snapshot by re-entering project, then apply again.
+- Runtime launch failure: confirm Bun is installed and available on `PATH`.

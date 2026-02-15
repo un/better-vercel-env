@@ -483,7 +483,7 @@
         "Auth instructions are accurate",
         "Known limitations are documented"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 40,

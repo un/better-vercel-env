@@ -2,6 +2,11 @@
 
 Use this file as a prepend-only log.
 
+## 2026-02-14 20:46 - Step 39 - README must match runtime command and dependency reality
+- Context: Rewriting docs from web-hosted flow to terminal-first OpenTUI flow.
+- Learning: Docs must explicitly mention Bun requirement and `npm run tui`/bin entry usage to prevent stale Next-era onboarding confusion.
+- Impact: Keep runtime prerequisites and key controls in README top sections.
+
 ## 2026-02-14 20:45 - Step 38 - Include explicit cleanup verification in manual smoke docs
 - Context: Writing reproducible manual smoke flow for `wiggy`.
 - Learning: Smoke docs must include both external verification commands and a full cleanup pass to avoid leaving residual test keys.
