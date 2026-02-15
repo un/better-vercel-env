@@ -99,7 +99,7 @@
         "Invalid transitions are blocked",
         "Back navigation is deterministic"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 8,

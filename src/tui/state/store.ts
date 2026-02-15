@@ -1,4 +1,7 @@
 import type { TuiAppState } from "./types";
+import type { TuiScreen } from "./types";
+
+import { transitionScreen } from "./machine";
 
 type Listener = (state: TuiAppState) => void;
 
@@ -48,6 +51,10 @@ export class TuiStore {
       ...this.state,
       ...patch,
     });
+  }
+
+  transitionTo(nextScreen: TuiScreen): void {
+    this.setState(transitionScreen(this.state, nextScreen));
   }
 
   reset(): void {
