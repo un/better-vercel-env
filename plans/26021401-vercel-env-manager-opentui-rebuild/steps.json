@@ -435,7 +435,7 @@
         "TUI runs without web server",
         "Dead web runtime code is removed"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 36,

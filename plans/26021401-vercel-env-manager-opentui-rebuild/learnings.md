@@ -2,6 +2,11 @@
 
 Use this file as a prepend-only log.
 
+## 2026-02-14 20:42 - Step 35 - Remove Next generated type includes after deleting app routes
+- Context: Deleting web runtime pages/routes during TUI-only pivot.
+- Learning: `tsconfig` references to `.next` generated validator types must be removed once Next app files are deleted, or `tsc` will fail on stale route imports.
+- Impact: Keep TypeScript include list runtime-agnostic during web-to-TUI migration.
+
 ## 2026-02-14 20:41 - Step 34 - Centralize per-screen key hint strings
 - Context: Adding persistent context-aware keyboard hints across auth/picker/editor/confirm/report views.
 - Learning: A shared hint resolver avoids stale or mismatched key docs between screen components and input handlers.
