@@ -115,6 +115,7 @@ async function startTuiApp(): Promise<void> {
         keyEditBuffer,
         valueEditBuffer,
         pendingOperations: state.editor.pendingOperations,
+        viewportWidth: process.stdout.columns ?? 80,
         statusMessage: state.status.message ?? "Ready",
       }),
     );

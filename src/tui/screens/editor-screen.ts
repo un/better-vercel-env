@@ -14,6 +14,7 @@ export interface EditorScreenModel {
   keyEditBuffer: string | null;
   valueEditBuffer: string | null;
   pendingOperations: EnvOperation[];
+  viewportWidth: number;
   statusMessage: string;
 }
 
@@ -75,9 +76,33 @@ export function EditorScreen(model: EditorScreenModel) {
   const environments = model.draft?.environments ?? [];
   const baselineRowsById = new Map((model.baseline?.rows ?? []).map((row) => [row.rowId, row]));
   const changeLog = formatChangeLogLines(model.pendingOperations);
+  const wideLayout = model.viewportWidth >= 120;
   const pageSize = 10;
   const safeOffset = Math.max(0, Math.min(model.scrollOffset, Math.max(0, rows.length - pageSize)));
   const visibleRows = rows.slice(safeOffset, safeOffset + pageSize);
+
+  const matrixText =
+    visibleRows.length > 0
+      ? visibleRows
+          .map((row) =>
+            rowLine(
+              row,
+              baselineRowsById.get(row.rowId) ?? null,
+              environments,
+              model.selectedRowId,
+              model.selectedValueId,
+              model.selectedEnvironmentId,
+            ),
+          )
+          .join("\n")
+      : "No rows";
+
+  const controlsText =
+    model.keyEditBuffer !== null
+      ? `Editing key: ${model.keyEditBuffer}`
+      : model.valueEditBuffer !== null
+        ? `Editing value: ${model.valueEditBuffer}`
+        : "Keys: j/k row, h/l value, [/ ] env, e key, a add value, v edit value, x delete value, s set, u unset, z undo row, p apply, q quit";
 
   return Box(
     {
@@ -89,36 +114,38 @@ export function EditorScreen(model: EditorScreenModel) {
       borderStyle: "rounded",
     },
     Text({ content: "Matrix Editor" }),
-    Text({ content: `Key | Values | ${environments.map((environment) => environment.name).join(" | ") || "Assignments"}` }),
-    Text({
-      content:
-        visibleRows.length > 0
-          ? visibleRows
-              .map((row) =>
-                rowLine(
-                  row,
-                  baselineRowsById.get(row.rowId) ?? null,
-                  environments,
-                  model.selectedRowId,
-                  model.selectedValueId,
-                  model.selectedEnvironmentId,
-                ),
-              )
-              .join("\n")
-          : "No rows",
-    }),
-    Text({ content: `Rows ${safeOffset + 1}-${Math.min(safeOffset + pageSize, rows.length)} of ${rows.length}` }),
-    Text({ content: "Change Log" }),
-    Text({ content: changeLog.join("\n") }),
-    Text({ content: "Legend: ! changed, * active selection" }),
-    Text({ content: `Status: ${model.statusMessage}` }),
-    Text({
-      content:
-        model.keyEditBuffer !== null
-          ? `Editing key: ${model.keyEditBuffer}`
-            : model.valueEditBuffer !== null
-              ? `Editing value: ${model.valueEditBuffer}`
-            : "Keys: j/k row, h/l value, [/ ] env, e key, a add value, v edit value, x delete value, s set, u unset, z undo row, p apply, q quit",
-    }),
+    Box(
+      {
+        flexDirection: wideLayout ? "row" : "column",
+        width: "100%",
+        gap: 1,
+      },
+      Box(
+        {
+          flexDirection: "column",
+          width: wideLayout ? "68%" : "100%",
+          gap: 1,
+          borderStyle: "single",
+          padding: 1,
+        },
+        Text({ content: `Key | Values | ${environments.map((environment) => environment.name).join(" | ") || "Assignments"}` }),
+        Text({ content: matrixText }),
+        Text({ content: `Rows ${safeOffset + 1}-${Math.min(safeOffset + pageSize, rows.length)} of ${rows.length}` }),
+      ),
+      Box(
+        {
+          flexDirection: "column",
+          width: wideLayout ? "32%" : "100%",
+          gap: 1,
+          borderStyle: "single",
+          padding: 1,
+        },
+        Text({ content: "Change Log" }),
+        Text({ content: changeLog.join("\n") }),
+        Text({ content: "Legend: ! changed, * active selection" }),
+        Text({ content: `Status: ${model.statusMessage}` }),
+        Text({ content: controlsText }),
+      ),
+    ),
   );
 }

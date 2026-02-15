@@ -2,6 +2,11 @@
 
 Use this file as a prepend-only log.
 
+## 2026-02-14 20:39 - Step 33 - Use viewport-width threshold for split-pane fallback
+- Context: Implementing wide vs narrow terminal editor layouts.
+- Learning: A simple width threshold (`>=120`) provides predictable split-pane behavior; below threshold, stacked panes prevent change-log/control clipping.
+- Impact: Keep matrix/report panes composable with row/column fallback and avoid fixed-width assumptions.
+
 ## 2026-02-14 20:38 - Step 32 - Guard multiline stdin parity explicitly in tests
 - Context: Verifying CLI add writes do not mutate values with extra newline artifacts.
 - Learning: A dedicated multiline stdin regression test is needed; single-line assertions alone can miss accidental newline appends.
