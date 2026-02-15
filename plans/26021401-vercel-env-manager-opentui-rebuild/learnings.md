@@ -2,6 +2,11 @@
 
 Use this file as a prepend-only log.
 
+## 2026-02-14 19:45 - Step 2 - OpenTUI build command details
+- Context: Validating OpenTUI core spike compilation with Bun.
+- Learning: `bun build` must use `--target bun` for OpenTUI (`bun:ffi` imports), and `--outdir` instead of single `--outfile` due emitted assets.
+- Impact: Use Bun-targeted build commands and outdir outputs for all OpenTUI compile checks.
+
 ## Operating protocol for sub-agents
 - Before starting any step, read this file completely.
 - After finishing a step, prepend any new learnings at the top using the template below.

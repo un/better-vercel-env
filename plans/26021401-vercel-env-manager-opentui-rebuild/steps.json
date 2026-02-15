@@ -39,7 +39,7 @@
         "Chosen approach compiles in a spike",
         "No conflicting UI runtime paths remain"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 3,
