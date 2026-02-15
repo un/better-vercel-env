@@ -11,6 +11,7 @@ export interface EditorScreenModel {
   selectedEnvironmentId: string | null;
   keyEditBuffer: string | null;
   valueEditBuffer: string | null;
+  pendingOperationCount: number;
   statusMessage: string;
 }
 
@@ -104,6 +105,7 @@ export function EditorScreen(model: EditorScreenModel) {
           : "No rows",
     }),
     Text({ content: `Rows ${safeOffset + 1}-${Math.min(safeOffset + pageSize, rows.length)} of ${rows.length}` }),
+    Text({ content: `Pending operations: ${model.pendingOperationCount}` }),
     Text({ content: "Legend: ! changed, * active selection" }),
     Text({ content: `Status: ${model.statusMessage}` }),
     Text({

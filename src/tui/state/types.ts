@@ -1,5 +1,5 @@
 import type { ApplyResultData, ProjectEnvSnapshot, VercelProjectSummary, VercelScopeSummary } from "@/lib/types";
-import type { EnvMatrixDraft } from "@/lib/env-model";
+import type { EnvMatrixDraft, EnvOperation } from "@/lib/env-model";
 
 export type TuiScreen = "auth" | "picker" | "editor" | "confirm" | "report";
 
@@ -12,6 +12,7 @@ export interface TuiEditorContext {
   snapshot: ProjectEnvSnapshot | null;
   baseline: EnvMatrixDraft | null;
   draft: EnvMatrixDraft | null;
+  pendingOperations: EnvOperation[];
   failedOperationIds: string[];
 }
 

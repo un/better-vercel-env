@@ -18,6 +18,7 @@ function createInitialState(): TuiAppState {
       snapshot: null,
       baseline: null,
       draft: null,
+      pendingOperations: [],
       failedOperationIds: [],
     },
     applyReport: null,

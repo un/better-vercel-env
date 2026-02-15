@@ -2,12 +2,13 @@ import { createCliRenderer } from "@opentui/core";
 import { pathToFileURL } from "node:url";
 
 import { getVercelCliAuthStatus } from "@/lib/vercel-cli";
-import { normalizeSnapshotToDraft } from "@/lib/env-model";
+import { normalizeSnapshotToDraft, type EnvMatrixDraft } from "@/lib/env-model";
 
 import { loadProjectsFromCli } from "./data/projects";
 import { loadScopesFromCli } from "./data/scopes";
 import { loadSnapshotForSelection } from "./data/snapshot";
 import { canEditAssignment, setRowAssignment, type AssignmentBlockReason } from "./editor/assignments";
+import { computePendingOperations } from "./editor/planning";
 import { addValueToDraft, editValueInDraft, removeValueFromDraft } from "./editor/value-pool";
 import { handleGlobalKeySequence } from "./keyboard/global-keys";
 import { registerRendererLifecycle } from "./lifecycle";
@@ -81,9 +82,21 @@ async function startTuiApp(): Promise<void> {
           state.editor.draft?.environments[Math.max(0, selectedEditorEnvironmentIndex)]?.id ?? null,
         keyEditBuffer,
         valueEditBuffer,
+        pendingOperationCount: state.editor.pendingOperations.length,
         statusMessage: state.status.message ?? "Ready",
       }),
     );
+  };
+
+  const patchEditorDraft = (nextDraft: EnvMatrixDraft) => {
+    const state = store.getState();
+    store.patchState({
+      editor: {
+        ...state.editor,
+        draft: nextDraft,
+        pendingOperations: computePendingOperations(state.editor.baseline, nextDraft),
+      },
+    });
   };
 
   const selectedEditorRow = () => {
@@ -230,6 +243,7 @@ async function startTuiApp(): Promise<void> {
           snapshot,
           baseline: normalized,
           draft: structuredClone(normalized),
+          pendingOperations: [],
         },
       });
       editorScrollOffset = 0;
@@ -383,14 +397,9 @@ async function startTuiApp(): Promise<void> {
           : row,
       );
 
-      store.patchState({
-        editor: {
-          ...state.editor,
-          draft: {
-            ...draft,
-            rows: nextRows,
-          },
-        },
+      patchEditorDraft({
+        ...draft,
+        rows: nextRows,
       });
 
       setStatusMessage(`Renamed key to ${nextKey}.`);
@@ -416,12 +425,7 @@ async function startTuiApp(): Promise<void> {
         return;
       }
 
-      store.patchState({
-        editor: {
-          ...state.editor,
-          draft: nextDraft.draft,
-        },
-      });
+      patchEditorDraft(nextDraft.draft);
 
       valueEditBuffer = null;
       setStatusMessage(`Updated value V${selectedEditorValueIndex + 1}.`);
@@ -560,12 +564,7 @@ async function startTuiApp(): Promise<void> {
       );
       selectedEditorValueIndex = addedIndex === undefined || addedIndex < 0 ? selectedEditorValueIndex : addedIndex;
 
-      store.patchState({
-        editor: {
-          ...state.editor,
-          draft: nextDraft.draft,
-        },
-      });
+      patchEditorDraft(nextDraft.draft);
 
       setStatusMessage(`Added value V${selectedEditorValueIndex + 1}. Press v to edit.`);
       renderCurrentScreen();
@@ -607,12 +606,7 @@ async function startTuiApp(): Promise<void> {
 
       selectedEditorValueIndex = Math.max(0, selectedEditorValueIndex - 1);
 
-      store.patchState({
-        editor: {
-          ...state.editor,
-          draft: result.draft,
-        },
-      });
+      patchEditorDraft(result.draft);
 
       normalizeSelectedValueIndex();
       setStatusMessage(`Deleted value V${selectedEditorValueIndex + 1}.`);
@@ -649,12 +643,7 @@ async function startTuiApp(): Promise<void> {
         return true;
       }
 
-      store.patchState({
-        editor: {
-          ...state.editor,
-          draft: nextDraft.draft,
-        },
-      });
+      patchEditorDraft(nextDraft.draft);
 
       setStatusMessage(`Set ${selectedEnvironment.name} to V${selectedEditorValueIndex + 1}.`);
       renderCurrentScreen();
@@ -683,12 +672,7 @@ async function startTuiApp(): Promise<void> {
         return true;
       }
 
-      store.patchState({
-        editor: {
-          ...state.editor,
-          draft: nextDraft.draft,
-        },
-      });
+      patchEditorDraft(nextDraft.draft);
 
       setStatusMessage(`Unset ${selectedEnvironment.name} assignment.`);
       renderCurrentScreen();

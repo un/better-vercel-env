@@ -255,7 +255,7 @@
         "Edits produce expected operations",
         "Ordering is deterministic"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 21,

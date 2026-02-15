@@ -2,6 +2,11 @@
 
 Use this file as a prepend-only log.
 
+## 2026-02-14 20:23 - Step 20 - Runtime import paths in TUI helper tests
+- Context: Adding live planner wrapper tests under `src/tui/editor`.
+- Learning: Runtime imports from new test-executed helpers should use relative module paths; alias-based runtime imports in this area can fail in Vitest even when type-only alias imports pass.
+- Impact: Prefer relative runtime imports for new TUI helper modules and reserve alias imports for app/runtime entrypoints.
+
 ## 2026-02-14 20:21 - Step 19 - Terminal-safe change highlighting
 - Context: Adding changed-row and changed-cell cues in the matrix without color dependencies.
 - Learning: Symbol-based indicators (`!` for changed, `*` for active selection) are reliable across terminals and keep diffs readable even without ANSI styling.
