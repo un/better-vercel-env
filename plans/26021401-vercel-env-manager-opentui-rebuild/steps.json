@@ -195,7 +195,7 @@
         "Rows render correctly",
         "Scrolling keeps context usable"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 16,

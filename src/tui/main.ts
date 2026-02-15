@@ -1,4 +1,4 @@
-import { Box, Text, createCliRenderer } from "@opentui/core";
+import { createCliRenderer } from "@opentui/core";
 import { pathToFileURL } from "node:url";
 
 import { getVercelCliAuthStatus } from "@/lib/vercel-cli";
@@ -10,6 +10,7 @@ import { loadSnapshotForSelection } from "./data/snapshot";
 import { handleGlobalKeySequence } from "./keyboard/global-keys";
 import { registerRendererLifecycle } from "./lifecycle";
 import { AuthScreen, type AuthScreenModel } from "./screens/auth-screen";
+import { EditorScreen } from "./screens/editor-screen";
 import { PickerScreen } from "./screens/picker-screen";
 import { createTuiStore } from "./state";
 
@@ -27,6 +28,7 @@ async function startTuiApp(): Promise<void> {
   });
   const store = createTuiStore();
   const lifecycle = registerRendererLifecycle(renderer);
+  let editorScrollOffset = 0;
 
   const authScreenModel: AuthScreenModel = {
     loading: true,
@@ -61,20 +63,11 @@ async function startTuiApp(): Promise<void> {
 
     replaceRootContent(
       renderer,
-      Box(
-        {
-          width: "100%",
-          height: "100%",
-          flexDirection: "column",
-          padding: 1,
-          borderStyle: "rounded",
-        },
-        Text({ content: "Editor placeholder" }),
-        Text({ content: `Project: ${state.selection.projectId ?? "-"}` }),
-        Text({ content: `Snapshot rows: ${state.editor.snapshot?.records.length ?? 0}` }),
-        Text({ content: `Baseline hash: ${state.editor.draft?.baselineHash ?? "-"}` }),
-        Text({ content: `Status: ${state.status.message ?? "-"}` }),
-      ),
+      EditorScreen({
+        draft: state.editor.draft,
+        scrollOffset: editorScrollOffset,
+        statusMessage: state.status.message ?? "Ready",
+      }),
     );
   };
 
@@ -275,6 +268,28 @@ async function startTuiApp(): Promise<void> {
       }
 
       void openEditorForSelection();
+      return true;
+    }
+
+    return false;
+  });
+
+  renderer.addInputHandler((sequence) => {
+    const state = store.getState();
+    if (state.screen !== "editor") {
+      return false;
+    }
+
+    const rowCount = state.editor.draft?.rows.length ?? 0;
+    if (sequence === "j" || sequence === "\u001b[B") {
+      editorScrollOffset = Math.min(editorScrollOffset + 1, Math.max(0, rowCount - 1));
+      renderCurrentScreen();
+      return true;
+    }
+
+    if (sequence === "k" || sequence === "\u001b[A") {
+      editorScrollOffset = Math.max(0, editorScrollOffset - 1);
+      renderCurrentScreen();
       return true;
     }
 
