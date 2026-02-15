@@ -75,7 +75,7 @@
         "No hung process remains",
         "Terminal state is restored"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 6,

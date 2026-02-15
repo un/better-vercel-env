@@ -1,10 +1,13 @@
 import { Box, Text, createCliRenderer } from "@opentui/core";
 import { pathToFileURL } from "node:url";
 
+import { registerRendererLifecycle } from "./lifecycle";
+
 async function startTuiApp(): Promise<void> {
   const renderer = await createCliRenderer({
     exitOnCtrlC: true,
   });
+  const lifecycle = registerRendererLifecycle(renderer);
 
   renderer.root.add(
     Box(
@@ -19,7 +22,8 @@ async function startTuiApp(): Promise<void> {
   );
 
   if (process.env.VBE_TUI_SMOKE === "1") {
-    renderer.destroy();
+    lifecycle.shutdown("smoke");
+    lifecycle.dispose();
   }
 }
 
