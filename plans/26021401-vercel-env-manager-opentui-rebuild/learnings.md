@@ -2,6 +2,11 @@
 
 Use this file as a prepend-only log.
 
+## 2026-02-14 20:31 - Step 25 - Hash revalidation must happen before action build execution
+- Context: Adding baseline conflict protection in the TUI apply path.
+- Learning: Reloading snapshot hash at apply time and comparing to the loaded baseline must run before any CLI write action executes.
+- Impact: Keep conflict checks as the first gate in apply orchestration so drifted drafts never produce writes.
+
 ## 2026-02-14 20:30 - Step 24 - Execute apply inside workspace lock boundary
 - Context: Wiring confirm flow to build CLI actions and execute `vercel env` mutations.
 - Learning: The same workspace lock boundary should wrap link + apply execution to keep deterministic command ordering and avoid concurrent workspace state races.

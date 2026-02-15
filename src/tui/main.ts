@@ -6,7 +6,7 @@ import { normalizeSnapshotToDraft, type EnvMatrixDraft } from "@/lib/env-model";
 import { APPLY_CONFIRM_PHRASE, isApplyConfirmPhraseValid } from "@/components/editor/confirm-gate";
 
 import { loadProjectsFromCli } from "./data/projects";
-import { executeApplyForSelection } from "./data/apply";
+import { BaselineConflictError, executeApplyForSelection } from "./data/apply";
 import { loadScopesFromCli } from "./data/scopes";
 import { loadSnapshotForSelection } from "./data/snapshot";
 import { canEditAssignment, setRowAssignment, type AssignmentBlockReason } from "./editor/assignments";
@@ -357,6 +357,13 @@ async function startTuiApp(): Promise<void> {
       return;
     }
 
+    const expectedBaselineHash = state.editor.baseline?.baselineHash;
+    if (!expectedBaselineHash) {
+      setStatusMessage("Missing baseline snapshot. Reload project before applying.");
+      renderCurrentScreen();
+      return;
+    }
+
     setStatusMessage(`Applying ${state.editor.pendingOperations.length} operation(s)...`);
     renderCurrentScreen();
 
@@ -364,6 +371,7 @@ async function startTuiApp(): Promise<void> {
       const report = await executeApplyForSelection({
         projectId: state.selection.projectId,
         scopeId: state.selection.scopeId,
+        expectedBaselineHash,
         operations: state.editor.pendingOperations,
       });
 
@@ -371,7 +379,11 @@ async function startTuiApp(): Promise<void> {
       store.transitionTo("report");
       setStatusMessage("Apply finished.");
     } catch (error) {
-      setStatusMessage(null, error instanceof Error ? error.message : "Apply failed.");
+      if (error instanceof BaselineConflictError) {
+        setStatusMessage(error.message);
+      } else {
+        setStatusMessage(null, error instanceof Error ? error.message : "Apply failed.");
+      }
       store.transitionTo("editor");
     }
 

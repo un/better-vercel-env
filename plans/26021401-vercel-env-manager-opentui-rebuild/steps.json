@@ -315,7 +315,7 @@
         "Conflict message is actionable",
         "No writes happen on conflict"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 26,

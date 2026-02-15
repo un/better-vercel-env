@@ -5,6 +5,7 @@ import {
   ensureProjectWorkspace,
   executeCliAddActions,
   linkVercelProjectWorkspace,
+  loadProjectSnapshotFromCli,
   resolveCliScopeFromScopeId,
   withWorkspaceLock,
 } from "@/lib/vercel-cli";
@@ -12,10 +13,29 @@ import {
 interface ExecuteApplyForSelectionInput {
   projectId: string;
   scopeId: string;
+  expectedBaselineHash: string;
   operations: EnvOperation[];
 }
 
+export class BaselineConflictError extends Error {
+  constructor(message = "Snapshot changed since load. Reload before applying.") {
+    super(message);
+    this.name = "BaselineConflictError";
+  }
+}
+
 export async function executeApplyForSelection(input: ExecuteApplyForSelectionInput): Promise<ApplyResultData> {
+  const latestSnapshot = await loadProjectSnapshotFromCli({
+    projectId: input.projectId,
+    scopeId: input.scopeId,
+  });
+
+  if (latestSnapshot.baselineHash !== input.expectedBaselineHash) {
+    throw new BaselineConflictError(
+      "Snapshot changed on Vercel since this draft loaded. Reload the project snapshot before applying.",
+    );
+  }
+
   const resolvedScope = await resolveCliScopeFromScopeId(input.scopeId);
   const workspacePath = await ensureProjectWorkspace({
     projectId: input.projectId,
