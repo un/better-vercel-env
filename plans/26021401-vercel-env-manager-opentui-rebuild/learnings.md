@@ -2,6 +2,11 @@
 
 Use this file as a prepend-only log.
 
+## 2026-02-14 20:43 - Step 36 - Bin should fail fast with Bun-specific guidance
+- Context: Repointing CLI scripts/bin from Next server launch to OpenTUI runtime.
+- Learning: The bin entry should detect missing Bun and return an actionable install message, since OpenTUI runtime path is Bun-backed.
+- Impact: Keep runtime launch errors explicit and user-facing in `bin/vercel-better-env.js`.
+
 ## 2026-02-14 20:42 - Step 35 - Remove Next generated type includes after deleting app routes
 - Context: Deleting web runtime pages/routes during TUI-only pivot.
 - Learning: `tsconfig` references to `.next` generated validator types must be removed once Next app files are deleted, or `tsc` will fail on stale route imports.

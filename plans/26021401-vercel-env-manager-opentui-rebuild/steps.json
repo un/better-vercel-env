@@ -447,7 +447,7 @@
         "Dev script launches TUI",
         "Verify script still enforces quality checks"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 37,

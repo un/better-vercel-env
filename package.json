@@ -41,9 +41,10 @@
   "author": "Omar",
   "license": "MIT",
   "scripts": {
-    "dev": "next dev --hostname 127.0.0.1 --port 6969",
-    "build": "next build",
-    "start": "next start --hostname 127.0.0.1 --port 6969",
+    "tui": "bun run src/tui/main.ts",
+    "dev": "npm run tui",
+    "build": "bun build src/tui/main.ts --target bun --outdir dist/tui",
+    "start": "npm run tui",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "vitest",
