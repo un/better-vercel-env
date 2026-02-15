@@ -61,7 +61,7 @@ export async function executeCliAddActions(
           args,
           cwd: input.workspacePath,
           timeoutMs: 30_000,
-          stdinText: `${action.value ?? ""}\n`,
+          stdinText: action.value ?? "",
         });
       } else {
         const args = [

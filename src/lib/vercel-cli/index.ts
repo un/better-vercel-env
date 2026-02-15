@@ -15,3 +15,4 @@ export * from "./apply-builder";
 export * from "./apply-executor";
 export * from "./apply-lock";
 export * from "./scope";
+export * from "./env-list";

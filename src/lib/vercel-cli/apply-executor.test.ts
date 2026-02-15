@@ -44,7 +44,7 @@ describe("executeCliAddActions", () => {
 
     expect(results.map((item) => item.status)).toEqual(["done", "done"]);
     expect(calls[0]?.args.slice(0, 4)).toEqual(["env", "add", "ALPHA", "development"]);
-    expect(calls[0]?.stdinText).toBe("value-a\n");
+    expect(calls[0]?.stdinText).toBe("value-a");
     expect(calls[1]?.args.slice(0, 4)).toEqual(["env", "rm", "BETA", "preview"]);
     expect(calls[1]?.stdinText).toBeUndefined();
   });

@@ -1,6 +1,8 @@
 import type { EnvOperation } from "@/lib/env-model";
 import type { BuiltInEnvironmentId } from "@/lib/types";
 
+import { isReservedRuntimeEnvKey } from "./reserved-keys";
+
 type CliApplyActionKind = "add" | "remove" | "skip";
 
 export interface CliApplyAction {
@@ -55,6 +57,19 @@ function mapSetLikeOperation(operation: EnvOperation): CliApplyAction[] {
     ];
   }
 
+  if (isReservedRuntimeEnvKey(after.key)) {
+    return [
+      {
+        operationId: operation.id,
+        actionKind: "skip",
+        key: after.key,
+        environment: null,
+        value: null,
+        reason: "reserved_runtime_key",
+      },
+    ];
+  }
+
   if (!after.target || after.target.length === 0) {
     return [
       {
@@ -102,6 +117,19 @@ function mapDeleteOperation(operation: EnvOperation): CliApplyAction[] {
         environment: null,
         value: null,
         reason: "unsupported_custom_environment",
+      },
+    ];
+  }
+
+  if (isReservedRuntimeEnvKey(before.key)) {
+    return [
+      {
+        operationId: operation.id,
+        actionKind: "skip",
+        key: before.key,
+        environment: null,
+        value: null,
+        reason: "reserved_runtime_key",
       },
     ];
   }

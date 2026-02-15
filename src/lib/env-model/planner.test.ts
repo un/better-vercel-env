@@ -30,6 +30,74 @@ function createBaseDraft(rows: EnvMatrixDraft["rows"]): EnvMatrixDraft {
 }
 
 describe("planOperations", () => {
+  it("returns no operations when one value spans multiple built-in environments", () => {
+    const baseline = createBaseDraft([
+      {
+        rowId: "row:IN_ALL",
+        key: "IN_ALL",
+        values: [
+          {
+            id: "value-1",
+            content: "shared",
+            type: "plain",
+            comment: null,
+            gitBranch: null,
+            readOnlyReason: null,
+            sourceRows: [{ rowId: "cli:prod:1" }, { rowId: "cli:prev:1" }, { rowId: "cli:dev:1" }],
+          },
+        ],
+        assignments: {
+          production: "value-1",
+          preview: "value-1",
+          development: "value-1",
+        },
+        sourceRows: [
+          {
+            id: "cli:prod:1",
+            key: "IN_ALL",
+            value: "shared",
+            type: "plain",
+            target: ["production"],
+            customEnvironmentIds: [],
+            comment: null,
+            gitBranch: null,
+            system: false,
+            readOnlyReason: null,
+          },
+          {
+            id: "cli:prev:1",
+            key: "IN_ALL",
+            value: "shared",
+            type: "plain",
+            target: ["preview"],
+            customEnvironmentIds: [],
+            comment: null,
+            gitBranch: null,
+            system: false,
+            readOnlyReason: null,
+          },
+          {
+            id: "cli:dev:1",
+            key: "IN_ALL",
+            value: "shared",
+            type: "plain",
+            target: ["development"],
+            customEnvironmentIds: [],
+            comment: null,
+            gitBranch: null,
+            system: false,
+            readOnlyReason: null,
+          },
+        ],
+        isNew: false,
+      },
+    ]);
+
+    const draft = structuredClone(baseline);
+
+    expect(planOperations(baseline, draft).operations).toHaveLength(0);
+  });
+
   it("returns no operations for unchanged draft", () => {
     const baseline = createBaseDraft([
       {

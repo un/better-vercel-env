@@ -61,12 +61,7 @@ export function ChangeOrderPanel({ isApplying, failedOperationIds, onApply }: Ch
     return failedOnly.length > 0 ? failedOnly : nextOperations;
   }, [baseline, draft, failedOperationIds]);
 
-  const operationsPerRow = useMemo(() => {
-    return operations.reduce<Map<string, number>>((result, operation) => {
-      result.set(operation.rowId, (result.get(operation.rowId) ?? 0) + 1);
-      return result;
-    }, new Map());
-  }, [operations]);
+  const displayedOperations = useMemo(() => [...operations].reverse(), [operations]);
 
   const operationCounts = useMemo(() => {
     return operations.reduce(
@@ -105,17 +100,26 @@ export function ChangeOrderPanel({ isApplying, failedOperationIds, onApply }: Ch
   };
 
   if (operations.length === 0) {
-    return <p className="text-sm text-muted-foreground">No pending changes.</p>;
+    return (
+      <div className="space-y-1">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Change log</p>
+        <p className="text-sm text-muted-foreground">No pending changes.</p>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Change log</p>
+        <p className="text-xs text-muted-foreground">Latest first</p>
+      </div>
       {failedOperationIds && failedOperationIds.size > 0 ? (
         <p className="rounded-md border border-destructive/40 bg-destructive/10 p-2 text-xs text-destructive">
           Showing previously failed operations. Fix values and retry apply.
         </p>
       ) : null}
-      {operations.map((operation) => (
+      {displayedOperations.map((operation) => (
         <div key={operation.id} className="rounded-md border border-border p-2">
           <div className="flex items-center gap-2">
             <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${kindClass(operation.kind)}`}>
@@ -123,18 +127,13 @@ export function ChangeOrderPanel({ isApplying, failedOperationIds, onApply }: Ch
             </span>
           </div>
           <p className="mt-2 text-sm">{operation.summary}</p>
-          {(operationsPerRow.get(operation.rowId) ?? 0) > 1 ? (
-            <p className="mt-1 text-xs text-muted-foreground">
-              Multiple overlapping edits detected for this row. Use row-level undo safely.
-            </p>
-          ) : null}
           <Button
             type="button"
             variant="outline"
             size="sm"
             className="mt-2 h-7 px-2 text-xs"
             onClick={() => undoRowChange(operation.rowId)}
-            disabled={isApplying || (operationsPerRow.get(operation.rowId) ?? 0) > 1}
+            disabled={isApplying}
           >
             Undo
           </Button>

@@ -3,11 +3,12 @@ import { describe, expect, it } from "vitest";
 import type { EnvOperation } from "@/lib/env-model";
 
 import { buildCliApplyActions } from "./apply-builder";
+import { parseVercelEnvListOutput } from "./env-list";
 import { normalizeProjects } from "./projects";
 import { parseVercelTeamsListOutput } from "./teams";
 
 describe("CLI command builders and parsers", () => {
-  it("builds deterministic apply actions and skips unsupported custom env operations", () => {
+  it("builds deterministic apply actions and skips unsupported operations", () => {
     const operations: EnvOperation[] = [
       {
         id: "update-row:1",
@@ -39,6 +40,21 @@ describe("CLI command builders and parsers", () => {
         },
         undoToken: "undo:2",
       },
+      {
+        id: "create-row:3",
+        kind: "create_env",
+        summary: "create reserved",
+        rowId: "row:3",
+        before: null,
+        after: {
+          rowId: "row:3",
+          key: "NX_DAEMON",
+          value: "1",
+          target: ["preview"],
+          customEnvironmentIds: [],
+        },
+        undoToken: "undo:3",
+      },
     ];
 
     const actions = buildCliApplyActions(operations);
@@ -66,6 +82,14 @@ describe("CLI command builders and parsers", () => {
         environment: null,
         value: null,
         reason: "unsupported_custom_environment",
+      },
+      {
+        operationId: "create-row:3",
+        actionKind: "skip",
+        key: "NX_DAEMON",
+        environment: null,
+        value: null,
+        reason: "reserved_runtime_key",
       },
     ]);
   });
@@ -99,6 +123,23 @@ describe("CLI command builders and parsers", () => {
     expect(projects).toEqual([
       { id: "prj_2", name: "Beta", framework: null, updatedAt: 200 },
       { id: "prj_1", name: "Alpha", framework: "nextjs", updatedAt: 100 },
+    ]);
+  });
+
+  it("parses env ls topology rows", () => {
+    const output = [
+      "Vercel CLI 44.6.4",
+      "Retrieving project...",
+      "name      value               environments                created",
+      "IN_ALL    Encrypted           Development                 15m ago",
+      "IN_ALL    Encrypted           Preview, Production         3h ago",
+      "IN_DEV    Encrypted           Preview                     2h ago",
+    ].join("\n");
+
+    expect(parseVercelEnvListOutput(output)).toEqual([
+      { key: "IN_ALL", target: ["development"] },
+      { key: "IN_ALL", target: ["production", "preview"] },
+      { key: "IN_DEV", target: ["preview"] },
     ]);
   });
 });

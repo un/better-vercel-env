@@ -61,13 +61,14 @@ describe("normalizeSnapshotToDraft", () => {
     const row = draft.rows[0];
 
     expect(row.key).toBe("API_URL");
-    expect(row.values).toHaveLength(2);
+    expect(row.values).toHaveLength(3);
     expect(row.values[0].content).toBe("https://api.nonprod.local");
-    expect(row.values[1].content).toBe("https://api.prod.local");
+    expect(row.values[1].content).toBe("https://api.nonprod.local");
+    expect(row.values[2].content).toBe("https://api.prod.local");
 
-    expect(row.assignments.production).toBe("value-2");
+    expect(row.assignments.production).toBe("value-3");
     expect(row.assignments.preview).toBe("value-1");
-    expect(row.assignments.development).toBe("value-1");
+    expect(row.assignments.development).toBe("value-2");
     expect(row.assignments["custom:ce_stage"]).toBe("value-1");
   });
 

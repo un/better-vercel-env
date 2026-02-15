@@ -7,6 +7,7 @@ import {
   buildSnapshotFromPulledEnvs,
   ensureProjectWorkspace,
   linkVercelProjectWorkspace,
+  listVercelEnvTopology,
   parseDotenvFile,
   pullAllBuiltInEnvironments,
   resolveCliScopeFromScopeId,
@@ -32,6 +33,8 @@ export async function loadProjectSnapshotFromCli(input: LoadSnapshotInput): Prom
       scope: resolvedScope.scopeArg,
     });
 
+    const topologyRows = await listVercelEnvTopology(workspacePath, resolvedScope.scopeArg).catch(() => []);
+
     const pulledFiles = await pullAllBuiltInEnvironments(workspacePath, resolvedScope.scopeArg);
 
     try {
@@ -46,7 +49,7 @@ export async function loadProjectSnapshotFromCli(input: LoadSnapshotInput): Prom
         production: await parseDotenvFile(pulledByEnvironment.production),
       };
 
-      return buildSnapshotFromPulledEnvs(input.projectId, mapByEnvironment);
+      return buildSnapshotFromPulledEnvs(input.projectId, mapByEnvironment, topologyRows);
     } finally {
       await Promise.all(
         pulledFiles.map(async (item) => {

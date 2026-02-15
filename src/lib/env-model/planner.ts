@@ -2,6 +2,7 @@ import type { EnvMatrixDraft } from "./types";
 import type { EnvOperation, OperationKind, PlannedOperations } from "./operations";
 
 interface DesiredCombo {
+  comboId: string;
   valueId: string;
   value: string;
   target: Array<"production" | "preview" | "development">;
@@ -26,7 +27,8 @@ function toComboSignature(combo: DesiredCombo): string {
 }
 
 function getDesiredCombos(row: EnvMatrixDraft["rows"][number]): DesiredCombo[] {
-  const combosByValue = new Map<string, DesiredCombo>();
+  const combos: DesiredCombo[] = [];
+  const signatures = new Set<string>();
 
   Object.entries(row.assignments).forEach(([environmentId, valueId]) => {
     if (!valueId) {
@@ -34,7 +36,8 @@ function getDesiredCombos(row: EnvMatrixDraft["rows"][number]): DesiredCombo[] {
     }
 
     const value = row.values.find((item) => item.id === valueId)?.content ?? "";
-    const combo = combosByValue.get(valueId) ?? {
+    const combo: DesiredCombo = {
+      comboId: environmentId,
       valueId,
       value,
       target: [],
@@ -46,31 +49,52 @@ function getDesiredCombos(row: EnvMatrixDraft["rows"][number]): DesiredCombo[] {
       environmentId === "preview" ||
       environmentId === "development"
     ) {
-      combo.target.push(environmentId);
+      combo.target = [environmentId];
     }
 
     if (environmentId.startsWith("custom:")) {
-      combo.customEnvironmentIds.push(environmentId.replace("custom:", ""));
+      combo.customEnvironmentIds = [environmentId.replace("custom:", "")];
     }
 
-    combosByValue.set(valueId, combo);
+    const signature = toComboSignature(combo);
+    if (signatures.has(signature)) {
+      return;
+    }
+
+    signatures.add(signature);
+    combos.push(combo);
   });
 
-  return Array.from(combosByValue.values());
+  return combos;
 }
 
 function getExistingComboSignatures(row: EnvMatrixDraft["rows"][number]): Set<string> {
   const signatures = new Set<string>();
 
   row.sourceRows.forEach((sourceRow) => {
-    signatures.add(
-      toComboSignature({
-        valueId: sourceRow.id,
-        value: sourceRow.value,
-        target: sourceRow.target,
-        customEnvironmentIds: sourceRow.customEnvironmentIds,
-      }),
-    );
+    sourceRow.target.forEach((target) => {
+      signatures.add(
+        toComboSignature({
+          comboId: `${sourceRow.id}:${target}`,
+          valueId: sourceRow.id,
+          value: sourceRow.value,
+          target: [target],
+          customEnvironmentIds: [],
+        }),
+      );
+    });
+
+    sourceRow.customEnvironmentIds.forEach((customEnvironmentId) => {
+      signatures.add(
+        toComboSignature({
+          comboId: `${sourceRow.id}:custom:${customEnvironmentId}`,
+          valueId: sourceRow.id,
+          value: sourceRow.value,
+          target: [],
+          customEnvironmentIds: [customEnvironmentId],
+        }),
+      );
+    });
   });
 
   return signatures;
@@ -98,7 +122,7 @@ function planCreateOperations(
       }
 
       operations.push({
-        id: `create-combo:${rowId}:${combo.valueId}`,
+        id: `create-combo:${rowId}:${combo.valueId}:${combo.comboId}`,
         kind: "create_env",
         summary: `Create value-target combination for ${draftRow.key}`,
         rowId,
@@ -110,7 +134,7 @@ function planCreateOperations(
           target: combo.target,
           customEnvironmentIds: combo.customEnvironmentIds,
         },
-        undoToken: `undo:create-combo:${rowId}:${combo.valueId}`,
+        undoToken: `undo:create-combo:${rowId}:${combo.valueId}:${combo.comboId}`,
       });
     });
   });
@@ -182,31 +206,64 @@ function planDeleteOperations(
       : new Set<string>();
 
     baselineRow.sourceRows.forEach((sourceRow) => {
-      const signature = toComboSignature({
-        valueId: sourceRow.id,
-        value: sourceRow.value,
-        target: sourceRow.target,
-        customEnvironmentIds: sourceRow.customEnvironmentIds,
+      sourceRow.target.forEach((target) => {
+        const signature = toComboSignature({
+          comboId: `${sourceRow.id}:${target}`,
+          valueId: sourceRow.id,
+          value: sourceRow.value,
+          target: [target],
+          customEnvironmentIds: [],
+        });
+
+        if (desiredSignatures.has(signature)) {
+          return;
+        }
+
+        operations.push({
+          id: `delete-row:${sourceRow.id}:${target}`,
+          kind: "delete_env",
+          summary: `Delete orphaned env row ${sourceRow.id}`,
+          rowId,
+          before: {
+            rowId,
+            key: baselineRow.key,
+            value: sourceRow.value,
+            target: [target],
+            customEnvironmentIds: [],
+          },
+          after: null,
+          undoToken: `undo:delete-row:${sourceRow.id}:${target}`,
+        });
       });
 
-      if (desiredSignatures.has(signature)) {
-        return;
-      }
-
-      operations.push({
-        id: `delete-row:${sourceRow.id}`,
-        kind: "delete_env",
-        summary: `Delete orphaned env row ${sourceRow.id}`,
-        rowId,
-        before: {
-          rowId,
-          key: baselineRow.key,
+      sourceRow.customEnvironmentIds.forEach((customEnvironmentId) => {
+        const signature = toComboSignature({
+          comboId: `${sourceRow.id}:custom:${customEnvironmentId}`,
+          valueId: sourceRow.id,
           value: sourceRow.value,
-          target: sourceRow.target,
-          customEnvironmentIds: sourceRow.customEnvironmentIds,
-        },
-        after: null,
-        undoToken: `undo:delete-row:${sourceRow.id}`,
+          target: [],
+          customEnvironmentIds: [customEnvironmentId],
+        });
+
+        if (desiredSignatures.has(signature)) {
+          return;
+        }
+
+        operations.push({
+          id: `delete-row:${sourceRow.id}:custom:${customEnvironmentId}`,
+          kind: "delete_env",
+          summary: `Delete orphaned env row ${sourceRow.id}`,
+          rowId,
+          before: {
+            rowId,
+            key: baselineRow.key,
+            value: sourceRow.value,
+            target: [],
+            customEnvironmentIds: [customEnvironmentId],
+          },
+          after: null,
+          undoToken: `undo:delete-row:${sourceRow.id}:custom:${customEnvironmentId}`,
+        });
       });
     });
   });

@@ -9,6 +9,8 @@ function toValueSignature(record: RawVercelEnvRecord): string {
     record.comment ?? "",
     record.gitBranch ?? "",
     record.readOnlyReason ?? "",
+    [...record.target].sort().join(","),
+    [...record.customEnvironmentIds].sort().join(","),
   ].join("::");
 }
 
