@@ -7,6 +7,7 @@ import { normalizeSnapshotToDraft } from "@/lib/env-model";
 import { loadProjectsFromCli } from "./data/projects";
 import { loadScopesFromCli } from "./data/scopes";
 import { loadSnapshotForSelection } from "./data/snapshot";
+import { addValueToDraft, editValueInDraft, removeValueFromDraft } from "./editor/value-pool";
 import { handleGlobalKeySequence } from "./keyboard/global-keys";
 import { registerRendererLifecycle } from "./lifecycle";
 import { AuthScreen, type AuthScreenModel } from "./screens/auth-screen";
@@ -30,7 +31,9 @@ async function startTuiApp(): Promise<void> {
   const lifecycle = registerRendererLifecycle(renderer);
   let editorScrollOffset = 0;
   let selectedEditorRowIndex = 0;
+  let selectedEditorValueIndex = 0;
   let keyEditBuffer: string | null = null;
+  let valueEditBuffer: string | null = null;
 
   const authScreenModel: AuthScreenModel = {
     loading: true,
@@ -69,10 +72,28 @@ async function startTuiApp(): Promise<void> {
         draft: state.editor.draft,
         scrollOffset: editorScrollOffset,
         selectedRowId: state.editor.draft?.rows[selectedEditorRowIndex]?.rowId ?? null,
+        selectedValueId:
+          state.editor.draft?.rows[selectedEditorRowIndex]?.values[Math.max(0, selectedEditorValueIndex)]?.id ?? null,
         keyEditBuffer,
+        valueEditBuffer,
         statusMessage: state.status.message ?? "Ready",
       }),
     );
+  };
+
+  const selectedEditorRow = () => {
+    const draft = store.getState().editor.draft;
+    if (!draft) {
+      return null;
+    }
+
+    return draft.rows[selectedEditorRowIndex] ?? null;
+  };
+
+  const normalizeSelectedValueIndex = () => {
+    const row = selectedEditorRow();
+    const max = Math.max(0, (row?.values.length ?? 1) - 1);
+    selectedEditorValueIndex = Math.min(Math.max(0, selectedEditorValueIndex), max);
   };
 
   const setStatusMessage = (message: string | null, error: string | null = null) => {
@@ -182,7 +203,9 @@ async function startTuiApp(): Promise<void> {
       });
       editorScrollOffset = 0;
       selectedEditorRowIndex = 0;
+      selectedEditorValueIndex = 0;
       keyEditBuffer = null;
+      valueEditBuffer = null;
       store.transitionTo("editor");
       setStatusMessage("Snapshot loaded.");
     } catch (error) {
@@ -342,6 +365,36 @@ async function startTuiApp(): Promise<void> {
       renderCurrentScreen();
     };
 
+    const commitValueEdit = () => {
+      if (!draft || valueEditBuffer === null) {
+        return;
+      }
+
+      const selectedRow = rows[selectedEditorRowIndex];
+      const selectedValue = selectedRow?.values[Math.max(0, selectedEditorValueIndex)];
+      if (!selectedRow || !selectedValue) {
+        valueEditBuffer = null;
+        return;
+      }
+
+      const nextDraft = editValueInDraft(draft, selectedRow.rowId, selectedValue.id, valueEditBuffer);
+      if (!nextDraft.updated) {
+        valueEditBuffer = null;
+        return;
+      }
+
+      store.patchState({
+        editor: {
+          ...state.editor,
+          draft: nextDraft.draft,
+        },
+      });
+
+      valueEditBuffer = null;
+      setStatusMessage(`Updated value V${selectedEditorValueIndex + 1}.`);
+      renderCurrentScreen();
+    };
+
     if (keyEditBuffer !== null) {
       if (sequence === "\u001b") {
         keyEditBuffer = null;
@@ -370,8 +423,36 @@ async function startTuiApp(): Promise<void> {
       return true;
     }
 
+    if (valueEditBuffer !== null) {
+      if (sequence === "\u001b") {
+        valueEditBuffer = null;
+        setStatusMessage("Cancelled value edit.");
+        renderCurrentScreen();
+        return true;
+      }
+
+      if (sequence === "\r" || sequence === "\n") {
+        commitValueEdit();
+        return true;
+      }
+
+      if (sequence === "\u007f") {
+        valueEditBuffer = valueEditBuffer.slice(0, -1);
+        renderCurrentScreen();
+        return true;
+      }
+
+      if (/^[\x20-\x7E]$/.test(sequence)) {
+        valueEditBuffer += sequence;
+        renderCurrentScreen();
+      }
+
+      return true;
+    }
+
     if (sequence === "j" || sequence === "\u001b[B") {
       selectedEditorRowIndex = Math.min(selectedEditorRowIndex + 1, Math.max(0, rowCount - 1));
+      normalizeSelectedValueIndex();
       if (selectedEditorRowIndex > editorScrollOffset + 9) {
         editorScrollOffset = selectedEditorRowIndex - 9;
       }
@@ -381,6 +462,7 @@ async function startTuiApp(): Promise<void> {
 
     if (sequence === "k" || sequence === "\u001b[A") {
       selectedEditorRowIndex = Math.max(0, selectedEditorRowIndex - 1);
+      normalizeSelectedValueIndex();
       if (selectedEditorRowIndex < editorScrollOffset) {
         editorScrollOffset = selectedEditorRowIndex;
       }
@@ -400,6 +482,96 @@ async function startTuiApp(): Promise<void> {
       return true;
     }
 
+    if (sequence === "h" || sequence === "\u001b[D") {
+      selectedEditorValueIndex = Math.max(0, selectedEditorValueIndex - 1);
+      renderCurrentScreen();
+      return true;
+    }
+
+    if (sequence === "l" || sequence === "\u001b[C") {
+      const selectedRow = rows[selectedEditorRowIndex];
+      const max = Math.max(0, (selectedRow?.values.length ?? 1) - 1);
+      selectedEditorValueIndex = Math.min(max, selectedEditorValueIndex + 1);
+      renderCurrentScreen();
+      return true;
+    }
+
+    if (sequence === "a" || sequence === "A") {
+      const selectedRow = rows[selectedEditorRowIndex];
+      if (!draft || !selectedRow) {
+        return true;
+      }
+
+      const nextDraft = addValueToDraft(draft, selectedRow.rowId);
+      if (!nextDraft.addedValueId) {
+        return true;
+      }
+
+      const addedIndex = nextDraft.draft.rows[selectedEditorRowIndex]?.values.findIndex(
+        (value) => value.id === nextDraft.addedValueId,
+      );
+      selectedEditorValueIndex = addedIndex === undefined || addedIndex < 0 ? selectedEditorValueIndex : addedIndex;
+
+      store.patchState({
+        editor: {
+          ...state.editor,
+          draft: nextDraft.draft,
+        },
+      });
+
+      setStatusMessage(`Added value V${selectedEditorValueIndex + 1}. Press v to edit.`);
+      renderCurrentScreen();
+      return true;
+    }
+
+    if (sequence === "v" || sequence === "V") {
+      const selectedRow = rows[selectedEditorRowIndex];
+      const selectedValue = selectedRow?.values[Math.max(0, selectedEditorValueIndex)];
+      if (!selectedValue) {
+        setStatusMessage("No value selected. Press a to add one.");
+        renderCurrentScreen();
+        return true;
+      }
+
+      valueEditBuffer = selectedValue.content;
+      setStatusMessage(`Editing value V${selectedEditorValueIndex + 1}. Enter to save, Esc to cancel.`);
+      renderCurrentScreen();
+      return true;
+    }
+
+    if (sequence === "x" || sequence === "X") {
+      const selectedRow = rows[selectedEditorRowIndex];
+      const selectedValue = selectedRow?.values[Math.max(0, selectedEditorValueIndex)];
+      if (!draft || !selectedRow || !selectedValue) {
+        return true;
+      }
+
+      const result = removeValueFromDraft(draft, selectedRow.rowId, selectedValue.id);
+      if (!result.removed) {
+        if (result.reason === "assigned") {
+          setStatusMessage("Cannot delete value while environments are assigned to it.");
+        } else {
+          setStatusMessage("Value no longer exists.");
+        }
+        renderCurrentScreen();
+        return true;
+      }
+
+      selectedEditorValueIndex = Math.max(0, selectedEditorValueIndex - 1);
+
+      store.patchState({
+        editor: {
+          ...state.editor,
+          draft: result.draft,
+        },
+      });
+
+      normalizeSelectedValueIndex();
+      setStatusMessage(`Deleted value V${selectedEditorValueIndex + 1}.`);
+      renderCurrentScreen();
+      return true;
+    }
+
     return false;
   });
 
@@ -411,12 +583,12 @@ async function startTuiApp(): Promise<void> {
         process.exit(0);
       },
       onHelp: () => {
-        process.stderr.write("Keys: q quit, r refresh auth, tab scope, j/k project, enter continue\n");
+        process.stderr.write("Keys: q quit, r refresh auth, tab scope, j/k project, enter continue, h/l value, a add, v edit, x delete\n");
       },
       onRefresh: () => {
         void refreshAuthStatus();
       },
-      isTextInputMode: () => keyEditBuffer !== null,
+      isTextInputMode: () => keyEditBuffer !== null || valueEditBuffer !== null,
     });
   });
 

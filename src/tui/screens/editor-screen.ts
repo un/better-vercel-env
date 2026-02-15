@@ -6,7 +6,9 @@ export interface EditorScreenModel {
   draft: EnvMatrixDraft | null;
   scrollOffset: number;
   selectedRowId: string | null;
+  selectedValueId: string | null;
   keyEditBuffer: string | null;
+  valueEditBuffer: string | null;
   statusMessage: string;
 }
 
@@ -23,8 +25,17 @@ function assignmentLabel(valueId: string | null, row: EnvMatrixDraft["rows"][num
   return `V${index + 1}`;
 }
 
-function rowLine(row: EnvMatrixDraft["rows"][number], selectedRowId: string | null): string {
-  const values = row.values.map((value, index) => `V${index + 1}:${value.content}`).join(" | ");
+function rowLine(
+  row: EnvMatrixDraft["rows"][number],
+  selectedRowId: string | null,
+  selectedValueId: string | null,
+): string {
+  const values = row.values
+    .map((value, index) => {
+      const marker = value.id === selectedValueId && row.rowId === selectedRowId ? "*" : "";
+      return `V${index + 1}${marker}:${value.content}`;
+    })
+    .join(" | ");
   const prod = assignmentLabel(row.assignments.production, row);
   const prev = assignmentLabel(row.assignments.preview, row);
   const dev = assignmentLabel(row.assignments.development, row);
@@ -50,9 +61,21 @@ export function EditorScreen(model: EditorScreenModel) {
     },
     Text({ content: "Matrix Editor" }),
     Text({ content: "Key | Values | Production | Preview | Development" }),
-    Text({ content: visibleRows.length > 0 ? visibleRows.map((row) => rowLine(row, model.selectedRowId)).join("\n") : "No rows" }),
+    Text({
+      content:
+        visibleRows.length > 0
+          ? visibleRows.map((row) => rowLine(row, model.selectedRowId, model.selectedValueId)).join("\n")
+          : "No rows",
+    }),
     Text({ content: `Rows ${safeOffset + 1}-${Math.min(safeOffset + pageSize, rows.length)} of ${rows.length}` }),
     Text({ content: `Status: ${model.statusMessage}` }),
-    Text({ content: model.keyEditBuffer === null ? "Keys: j/k move, e edit key, q quit" : `Editing key: ${model.keyEditBuffer}` }),
+    Text({
+      content:
+        model.keyEditBuffer !== null
+          ? `Editing key: ${model.keyEditBuffer}`
+          : model.valueEditBuffer !== null
+            ? `Editing value: ${model.valueEditBuffer}`
+            : "Keys: j/k row, h/l value, e key, a add value, v edit value, x delete value, q quit",
+    }),
   );
 }

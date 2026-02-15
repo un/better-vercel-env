@@ -219,7 +219,7 @@
         "Values can be edited",
         "Unsafe deletion is prevented"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 18,

@@ -2,6 +2,11 @@
 
 Use this file as a prepend-only log.
 
+## 2026-02-14 20:18 - Step 17 - Value ID allocation after deletions
+- Context: Implementing add/remove value pool editing in the terminal editor.
+- Learning: Generating new value IDs from `values.length + 1` can create duplicate IDs after deleting non-tail values; allocation must use max existing numeric suffix + 1.
+- Impact: Keep value ID generation collision-safe before assignment editing and planner wiring steps.
+
 ## 2026-02-14 19:52 - Step 4 - Entrypoint smoke output behavior
 - Context: Running a one-shot OpenTUI initialization smoke test.
 - Learning: Even short-lived renderer startup emits terminal control sequences; smoke checks should use a dedicated env flag and can redirect output in automation.
