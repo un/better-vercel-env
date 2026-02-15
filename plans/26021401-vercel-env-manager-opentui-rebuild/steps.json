@@ -87,7 +87,7 @@
         "Transitions are explicit",
         "State can reset predictably"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 7,
