@@ -1,6 +1,7 @@
 import { Box, Text, createCliRenderer } from "@opentui/core";
 import { pathToFileURL } from "node:url";
 
+import { handleGlobalKeySequence } from "./keyboard/global-keys";
 import { registerRendererLifecycle } from "./lifecycle";
 
 async function startTuiApp(): Promise<void> {
@@ -8,6 +9,23 @@ async function startTuiApp(): Promise<void> {
     exitOnCtrlC: true,
   });
   const lifecycle = registerRendererLifecycle(renderer);
+
+  renderer.addInputHandler((sequence) => {
+    return handleGlobalKeySequence(sequence, {
+      onQuit: () => {
+        lifecycle.shutdown("keyboard");
+        lifecycle.dispose();
+        process.exit(0);
+      },
+      onHelp: () => {
+        process.stderr.write("Keys: q quit, r refresh, ? help\n");
+      },
+      onRefresh: () => {
+        process.stderr.write("Refresh requested\n");
+      },
+      isTextInputMode: () => false,
+    });
+  });
 
   renderer.root.add(
     Box(

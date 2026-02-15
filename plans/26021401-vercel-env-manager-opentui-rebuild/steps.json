@@ -111,7 +111,7 @@
         "Help/key hints are discoverable",
         "Input fields are not hijacked"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 9,
