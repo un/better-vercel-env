@@ -2,6 +2,11 @@
 
 Use this file as a prepend-only log.
 
+## 2026-02-14 20:28 - Step 23 - Reuse shared confirm phrase source
+- Context: Implementing confirm screen typing gate before apply actions.
+- Learning: Use the shared `isApplyConfirmPhraseValid` helper and phrase constant to avoid drift in exact-phrase semantics between web and TUI flows.
+- Impact: Keep confirm-gate source-of-truth centralized and call it directly from TUI apply preparation.
+
 ## 2026-02-14 20:26 - Step 22 - Undo must normalize cursor indices
 - Context: Wiring row-level undo to restore baseline rows or remove draft-only rows.
 - Learning: After undo removes or reshapes a row, selection indices (row/value/environment) must be clamped immediately to avoid stale cursor references.

@@ -291,7 +291,7 @@
         "Exact phrase enables apply",
         "Gate resets after apply/cancel"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 24,

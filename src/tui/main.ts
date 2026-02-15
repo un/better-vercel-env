@@ -3,6 +3,7 @@ import { pathToFileURL } from "node:url";
 
 import { getVercelCliAuthStatus } from "@/lib/vercel-cli";
 import { normalizeSnapshotToDraft, type EnvMatrixDraft } from "@/lib/env-model";
+import { APPLY_CONFIRM_PHRASE, isApplyConfirmPhraseValid } from "@/components/editor/confirm-gate";
 
 import { loadProjectsFromCli } from "./data/projects";
 import { loadScopesFromCli } from "./data/scopes";
@@ -14,8 +15,10 @@ import { addValueToDraft, editValueInDraft, removeValueFromDraft } from "./edito
 import { handleGlobalKeySequence } from "./keyboard/global-keys";
 import { registerRendererLifecycle } from "./lifecycle";
 import { AuthScreen, type AuthScreenModel } from "./screens/auth-screen";
+import { ConfirmScreen } from "./screens/confirm-screen";
 import { EditorScreen } from "./screens/editor-screen";
 import { PickerScreen } from "./screens/picker-screen";
+import { ReportScreen } from "./screens/report-screen";
 import { createTuiStore } from "./state";
 
 function replaceRootContent(renderer: Awaited<ReturnType<typeof createCliRenderer>>, content: unknown): void {
@@ -38,6 +41,7 @@ async function startTuiApp(): Promise<void> {
   let selectedEditorEnvironmentIndex = 0;
   let keyEditBuffer: string | null = null;
   let valueEditBuffer: string | null = null;
+  let confirmInput = "";
 
   const authScreenModel: AuthScreenModel = {
     loading: true,
@@ -65,6 +69,31 @@ async function startTuiApp(): Promise<void> {
           activeScopeId: state.selection.scopeId,
           activeProjectId: state.selection.projectId,
           statusMessage: state.status.message ?? "Select scope and project",
+        }),
+      );
+      return;
+    }
+
+    if (state.screen === "confirm") {
+      replaceRootContent(
+        renderer,
+        ConfirmScreen({
+          expectedPhrase: APPLY_CONFIRM_PHRASE,
+          input: confirmInput,
+          ready: isApplyConfirmPhraseValid(confirmInput),
+          pendingOperationCount: state.editor.pendingOperations.length,
+          statusMessage: state.status.message ?? "Confirm to continue",
+        }),
+      );
+      return;
+    }
+
+    if (state.screen === "report") {
+      replaceRootContent(
+        renderer,
+        ReportScreen({
+          report: state.applyReport,
+          statusMessage: state.status.message ?? "Apply report",
         }),
       );
       return;
@@ -253,6 +282,7 @@ async function startTuiApp(): Promise<void> {
       selectedEditorEnvironmentIndex = 0;
       keyEditBuffer = null;
       valueEditBuffer = null;
+      confirmInput = "";
       store.transitionTo("editor");
       setStatusMessage("Snapshot loaded.");
     } catch (error) {
@@ -702,6 +732,85 @@ async function startTuiApp(): Promise<void> {
       return true;
     }
 
+    if (sequence === "p" || sequence === "P") {
+      if (state.editor.pendingOperations.length === 0) {
+        setStatusMessage("No pending operations to apply.");
+        renderCurrentScreen();
+        return true;
+      }
+
+      confirmInput = "";
+      store.transitionTo("confirm");
+      setStatusMessage("Type confirmation phrase exactly to continue.");
+      renderCurrentScreen();
+      return true;
+    }
+
+    return false;
+  });
+
+  renderer.addInputHandler((sequence) => {
+    const state = store.getState();
+    if (state.screen !== "confirm") {
+      return false;
+    }
+
+    if (sequence === "\u001b") {
+      confirmInput = "";
+      store.transitionTo("editor");
+      setStatusMessage("Apply cancelled.");
+      renderCurrentScreen();
+      return true;
+    }
+
+    if (sequence === "\r" || sequence === "\n") {
+      if (!isApplyConfirmPhraseValid(confirmInput)) {
+        setStatusMessage("Confirmation phrase mismatch. Apply is blocked.");
+        renderCurrentScreen();
+        return true;
+      }
+
+      confirmInput = "";
+      store.patchState({
+        applyReport: {
+          accepted: state.editor.pendingOperations.length,
+          results: [],
+        },
+      });
+      store.transitionTo("report");
+      setStatusMessage("Confirmation accepted. Apply pipeline wiring is next.");
+      renderCurrentScreen();
+      return true;
+    }
+
+    if (sequence === "\u007f") {
+      confirmInput = confirmInput.slice(0, -1);
+      renderCurrentScreen();
+      return true;
+    }
+
+    if (/^[\x20-\x7E]$/.test(sequence)) {
+      confirmInput += sequence;
+      renderCurrentScreen();
+      return true;
+    }
+
+    return true;
+  });
+
+  renderer.addInputHandler((sequence) => {
+    const state = store.getState();
+    if (state.screen !== "report") {
+      return false;
+    }
+
+    if (sequence === "\r" || sequence === "\n" || sequence === "\u001b") {
+      store.transitionTo("editor");
+      setStatusMessage("Returned to editor.");
+      renderCurrentScreen();
+      return true;
+    }
+
     return false;
   });
 
@@ -713,12 +822,12 @@ async function startTuiApp(): Promise<void> {
         process.exit(0);
       },
       onHelp: () => {
-        process.stderr.write("Keys: q quit, r refresh auth, tab scope, j/k project, enter continue, h/l value, [/ ] env, a add, v edit, x delete, s set, u unset, z undo row\n");
+        process.stderr.write("Keys: q quit, r refresh auth, tab scope, j/k project, enter continue, h/l value, [/ ] env, a add, v edit, x delete, s set, u unset, z undo row, p apply\n");
       },
       onRefresh: () => {
         void refreshAuthStatus();
       },
-      isTextInputMode: () => keyEditBuffer !== null || valueEditBuffer !== null,
+      isTextInputMode: () => keyEditBuffer !== null || valueEditBuffer !== null || store.getState().screen === "confirm",
     });
   });
 
