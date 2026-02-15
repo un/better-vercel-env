@@ -5,6 +5,7 @@ import { getVercelCliAuthStatus } from "@/lib/vercel-cli";
 
 import { loadProjectsFromCli } from "./data/projects";
 import { loadScopesFromCli } from "./data/scopes";
+import { loadSnapshotForSelection } from "./data/snapshot";
 import { handleGlobalKeySequence } from "./keyboard/global-keys";
 import { registerRendererLifecycle } from "./lifecycle";
 import { AuthScreen, type AuthScreenModel } from "./screens/auth-screen";
@@ -68,7 +69,9 @@ async function startTuiApp(): Promise<void> {
           borderStyle: "rounded",
         },
         Text({ content: "Editor placeholder" }),
-        Text({ content: "Picker continue action succeeded." }),
+        Text({ content: `Project: ${state.selection.projectId ?? "-"}` }),
+        Text({ content: `Snapshot rows: ${state.editor.snapshot?.records.length ?? 0}` }),
+        Text({ content: `Status: ${state.status.message ?? "-"}` }),
       ),
     );
   };
@@ -156,6 +159,34 @@ async function startTuiApp(): Promise<void> {
     renderCurrentScreen();
   };
 
+  const openEditorForSelection = async () => {
+    const state = store.getState();
+    if (!state.selection.scopeId || !state.selection.projectId) {
+      setStatusMessage("Select a scope and project before continuing.");
+      renderCurrentScreen();
+      return;
+    }
+
+    setStatusMessage("Loading project snapshot...");
+    renderCurrentScreen();
+
+    try {
+      const snapshot = await loadSnapshotForSelection(state.selection.projectId, state.selection.scopeId);
+      store.patchState({
+        editor: {
+          ...state.editor,
+          snapshot,
+        },
+      });
+      store.transitionTo("editor");
+      setStatusMessage("Snapshot loaded.");
+    } catch (error) {
+      setStatusMessage(null, error instanceof Error ? error.message : "Unable to load project snapshot.");
+    }
+
+    renderCurrentScreen();
+  };
+
   const refreshAuthStatus = async () => {
     authScreenModel.loading = true;
     authScreenModel.error = null;
@@ -238,9 +269,7 @@ async function startTuiApp(): Promise<void> {
         return true;
       }
 
-      store.transitionTo("editor");
-      setStatusMessage(`Continuing with project ${state.selection.projectId}.`);
-      renderCurrentScreen();
+      void openEditorForSelection();
       return true;
     }
 
