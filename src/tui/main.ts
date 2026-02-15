@@ -19,6 +19,7 @@ import { registerRendererLifecycle } from "./lifecycle";
 import { AuthScreen, type AuthScreenModel } from "./screens/auth-screen";
 import { ConfirmScreen } from "./screens/confirm-screen";
 import { EditorScreen } from "./screens/editor-screen";
+import { getContextKeyHints } from "./screens/key-hints";
 import { PickerScreen } from "./screens/picker-screen";
 import { ReportScreen } from "./screens/report-screen";
 import { createTuiStore } from "./state";
@@ -52,6 +53,7 @@ async function startTuiApp(): Promise<void> {
     activeScope: null,
     message: "Checking Vercel CLI authentication...",
     error: null,
+    keyHints: getContextKeyHints({ screen: "auth" }),
   };
 
   const renderCurrentScreen = () => {
@@ -71,6 +73,7 @@ async function startTuiApp(): Promise<void> {
           activeScopeId: state.selection.scopeId,
           activeProjectId: state.selection.projectId,
           statusMessage: state.status.message ?? "Select scope and project",
+          keyHints: getContextKeyHints({ screen: "picker" }),
         }),
       );
       return;
@@ -85,6 +88,7 @@ async function startTuiApp(): Promise<void> {
           ready: isApplyConfirmPhraseValid(confirmInput),
           pendingOperationCount: getApplyOperations().length,
           statusMessage: state.status.message ?? "Confirm to continue",
+          keyHints: getContextKeyHints({ screen: "confirm", textInputMode: true }),
         }),
       );
       return;
@@ -96,6 +100,7 @@ async function startTuiApp(): Promise<void> {
         ReportScreen({
           report: state.applyReport,
           statusMessage: state.status.message ?? "Apply report",
+          keyHints: getContextKeyHints({ screen: "report" }),
         }),
       );
       return;

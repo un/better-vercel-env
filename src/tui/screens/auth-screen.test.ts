@@ -24,6 +24,7 @@ describe("auth screen model semantics", () => {
         activeScope: null,
         message: "",
         error: null,
+        keyHints: "",
       }),
     ).toBe("Checking CLI auth status...");
   });
@@ -37,6 +38,7 @@ describe("auth screen model semantics", () => {
         activeScope: null,
         message: "",
         error: null,
+        keyHints: "",
       }),
     ).toBe("Authenticated");
   });

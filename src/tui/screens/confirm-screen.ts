@@ -6,6 +6,7 @@ export interface ConfirmScreenModel {
   ready: boolean;
   pendingOperationCount: number;
   statusMessage: string;
+  keyHints: string;
 }
 
 export function ConfirmScreen(model: ConfirmScreenModel) {
@@ -24,6 +25,6 @@ export function ConfirmScreen(model: ConfirmScreenModel) {
     Text({ content: `Input: ${model.input}` }),
     Text({ content: model.ready ? "Status: phrase matches, press Enter to continue." : "Status: phrase does not match." }),
     Text({ content: `Message: ${model.statusMessage}` }),
-    Text({ content: "Keys: Enter apply, Esc cancel, Backspace edit, q quit" }),
+    Text({ content: model.keyHints }),
   );
 }

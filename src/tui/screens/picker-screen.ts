@@ -8,6 +8,7 @@ export interface PickerScreenModel {
   activeScopeId: string | null;
   activeProjectId: string | null;
   statusMessage: string;
+  keyHints: string;
 }
 
 function formatScope(scope: VercelScopeSummary, isActive: boolean): string {
@@ -44,6 +45,6 @@ export function PickerScreen(model: PickerScreenModel) {
     Text({ content: scopeLines.join("\n") }),
     Text({ content: "Projects" }),
     Text({ content: projectLines.join("\n") }),
-    Text({ content: "Keys: tab cycle scope, j/k project, enter continue" }),
+    Text({ content: model.keyHints }),
   );
 }

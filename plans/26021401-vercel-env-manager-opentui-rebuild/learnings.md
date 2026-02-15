@@ -2,6 +2,11 @@
 
 Use this file as a prepend-only log.
 
+## 2026-02-14 20:41 - Step 34 - Centralize per-screen key hint strings
+- Context: Adding persistent context-aware keyboard hints across auth/picker/editor/confirm/report views.
+- Learning: A shared hint resolver avoids stale or mismatched key docs between screen components and input handlers.
+- Impact: Route all hint text through one helper when keymaps change.
+
 ## 2026-02-14 20:39 - Step 33 - Use viewport-width threshold for split-pane fallback
 - Context: Implementing wide vs narrow terminal editor layouts.
 - Learning: A simple width threshold (`>=120`) provides predictable split-pane behavior; below threshold, stacked panes prevent change-log/control clipping.

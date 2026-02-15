@@ -423,7 +423,7 @@
         "Hints match active controls",
         "No noisy or stale hints"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 35,

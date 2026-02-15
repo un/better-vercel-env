@@ -7,6 +7,7 @@ export interface AuthScreenModel {
   activeScope: string | null;
   message: string;
   error: string | null;
+  keyHints: string;
 }
 
 function statusLabel(model: AuthScreenModel): string {
@@ -37,7 +38,7 @@ export function AuthScreen(model: AuthScreenModel) {
     Text({ content: model.username ? `User: ${model.username}` : "User: -" }),
     Text({ content: model.activeScope ? `Scope: ${model.activeScope}` : "Scope: -" }),
     Text({ content: model.error ? `Error: ${model.error}` : "Error: -" }),
-    Text({ content: "Actions: r refresh, q quit, ? help" }),
+    Text({ content: model.keyHints }),
     Text({ content: "If not authenticated run: vercel login" }),
   );
 }

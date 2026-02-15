@@ -7,6 +7,7 @@ import { formatApplyReportLines } from "./report-format";
 export interface ReportScreenModel {
   report: ApplyResultData | null;
   statusMessage: string;
+  keyHints: string;
 }
 
 export function ReportScreen(model: ReportScreenModel) {
@@ -24,6 +25,6 @@ export function ReportScreen(model: ReportScreenModel) {
     Text({ content: "Apply Report" }),
     Text({ content: lines.join("\n") }),
     Text({ content: `Status: ${model.statusMessage}` }),
-    Text({ content: "Keys: Enter return to editor, q quit" }),
+    Text({ content: model.keyHints }),
   );
 }
