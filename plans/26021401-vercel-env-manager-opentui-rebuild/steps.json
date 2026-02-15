@@ -387,7 +387,7 @@
         "No incorrect target collapsing",
         "Planner behavior matches topology"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 32,

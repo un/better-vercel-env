@@ -2,6 +2,11 @@
 
 Use this file as a prepend-only log.
 
+## 2026-02-14 20:37 - Step 31 - Add split-topology regression fixture near TUI data path
+- Context: Guarding against accidental IN_ALL-style target collapsing after TUI integration changes.
+- Learning: A focused topology parity test at the TUI data boundary catches regressions even when core normalize/planner tests still pass independently.
+- Impact: Keep at least one TUI-side split-topology regression test when touching snapshot/load/planning integration.
+
 ## 2026-02-14 20:35 - Step 30 - Defend reserved-key policy at editor ingress and key edits
 - Context: Ensuring reserved runtime env keys stay hidden and non-applicable in TUI.
 - Learning: Filtering reserved keys only in apply path is not enough; snapshot ingest and key-rename interactions should also enforce the same policy.
