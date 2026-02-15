@@ -29,6 +29,8 @@ async function startTuiApp(): Promise<void> {
   const store = createTuiStore();
   const lifecycle = registerRendererLifecycle(renderer);
   let editorScrollOffset = 0;
+  let selectedEditorRowIndex = 0;
+  let keyEditBuffer: string | null = null;
 
   const authScreenModel: AuthScreenModel = {
     loading: true,
@@ -66,6 +68,8 @@ async function startTuiApp(): Promise<void> {
       EditorScreen({
         draft: state.editor.draft,
         scrollOffset: editorScrollOffset,
+        selectedRowId: state.editor.draft?.rows[selectedEditorRowIndex]?.rowId ?? null,
+        keyEditBuffer,
         statusMessage: state.status.message ?? "Ready",
       }),
     );
@@ -176,6 +180,9 @@ async function startTuiApp(): Promise<void> {
           draft: structuredClone(normalized),
         },
       });
+      editorScrollOffset = 0;
+      selectedEditorRowIndex = 0;
+      keyEditBuffer = null;
       store.transitionTo("editor");
       setStatusMessage("Snapshot loaded.");
     } catch (error) {
@@ -280,15 +287,115 @@ async function startTuiApp(): Promise<void> {
       return false;
     }
 
-    const rowCount = state.editor.draft?.rows.length ?? 0;
+    const draft = state.editor.draft;
+    const rows = draft?.rows ?? [];
+    const rowCount = rows.length;
+
+    const commitKeyEdit = () => {
+      if (!draft || keyEditBuffer === null) {
+        return;
+      }
+
+      const selectedRow = rows[selectedEditorRowIndex];
+      if (!selectedRow) {
+        keyEditBuffer = null;
+        return;
+      }
+
+      const nextKey = keyEditBuffer.trim();
+      if (nextKey.length === 0) {
+        setStatusMessage("Key cannot be empty.");
+        keyEditBuffer = null;
+        renderCurrentScreen();
+        return;
+      }
+
+      const conflict = rows.some((row, index) => index !== selectedEditorRowIndex && row.key === nextKey);
+      if (conflict) {
+        setStatusMessage(`Key ${nextKey} already exists.`);
+        keyEditBuffer = null;
+        renderCurrentScreen();
+        return;
+      }
+
+      const nextRows = rows.map((row, index) =>
+        index === selectedEditorRowIndex
+          ? {
+              ...row,
+              key: nextKey,
+            }
+          : row,
+      );
+
+      store.patchState({
+        editor: {
+          ...state.editor,
+          draft: {
+            ...draft,
+            rows: nextRows,
+          },
+        },
+      });
+
+      setStatusMessage(`Renamed key to ${nextKey}.`);
+      keyEditBuffer = null;
+      renderCurrentScreen();
+    };
+
+    if (keyEditBuffer !== null) {
+      if (sequence === "\u001b") {
+        keyEditBuffer = null;
+        setStatusMessage("Cancelled key edit.");
+        renderCurrentScreen();
+        return true;
+      }
+
+      if (sequence === "\r" || sequence === "\n") {
+        commitKeyEdit();
+        return true;
+      }
+
+      if (sequence === "\u007f") {
+        keyEditBuffer = keyEditBuffer.slice(0, -1);
+        renderCurrentScreen();
+        return true;
+      }
+
+      if (/^[a-zA-Z0-9_]$/.test(sequence)) {
+        keyEditBuffer += sequence;
+        renderCurrentScreen();
+        return true;
+      }
+
+      return true;
+    }
+
     if (sequence === "j" || sequence === "\u001b[B") {
-      editorScrollOffset = Math.min(editorScrollOffset + 1, Math.max(0, rowCount - 1));
+      selectedEditorRowIndex = Math.min(selectedEditorRowIndex + 1, Math.max(0, rowCount - 1));
+      if (selectedEditorRowIndex > editorScrollOffset + 9) {
+        editorScrollOffset = selectedEditorRowIndex - 9;
+      }
       renderCurrentScreen();
       return true;
     }
 
     if (sequence === "k" || sequence === "\u001b[A") {
-      editorScrollOffset = Math.max(0, editorScrollOffset - 1);
+      selectedEditorRowIndex = Math.max(0, selectedEditorRowIndex - 1);
+      if (selectedEditorRowIndex < editorScrollOffset) {
+        editorScrollOffset = selectedEditorRowIndex;
+      }
+      renderCurrentScreen();
+      return true;
+    }
+
+    if (sequence === "e" || sequence === "E") {
+      const selectedRow = rows[selectedEditorRowIndex];
+      if (!selectedRow) {
+        return true;
+      }
+
+      keyEditBuffer = selectedRow.key;
+      setStatusMessage(`Editing key ${selectedRow.key}. Enter to save, Esc to cancel.`);
       renderCurrentScreen();
       return true;
     }
@@ -309,7 +416,7 @@ async function startTuiApp(): Promise<void> {
       onRefresh: () => {
         void refreshAuthStatus();
       },
-      isTextInputMode: () => false,
+      isTextInputMode: () => keyEditBuffer !== null,
     });
   });
 

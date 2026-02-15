@@ -207,7 +207,7 @@
         "Invalid edits are blocked or warned",
         "State remains consistent"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 17,
