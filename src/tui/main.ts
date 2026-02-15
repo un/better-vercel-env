@@ -7,6 +7,7 @@ import { normalizeSnapshotToDraft } from "@/lib/env-model";
 import { loadProjectsFromCli } from "./data/projects";
 import { loadScopesFromCli } from "./data/scopes";
 import { loadSnapshotForSelection } from "./data/snapshot";
+import { canEditAssignment, setRowAssignment, type AssignmentBlockReason } from "./editor/assignments";
 import { addValueToDraft, editValueInDraft, removeValueFromDraft } from "./editor/value-pool";
 import { handleGlobalKeySequence } from "./keyboard/global-keys";
 import { registerRendererLifecycle } from "./lifecycle";
@@ -32,6 +33,7 @@ async function startTuiApp(): Promise<void> {
   let editorScrollOffset = 0;
   let selectedEditorRowIndex = 0;
   let selectedEditorValueIndex = 0;
+  let selectedEditorEnvironmentIndex = 0;
   let keyEditBuffer: string | null = null;
   let valueEditBuffer: string | null = null;
 
@@ -74,6 +76,8 @@ async function startTuiApp(): Promise<void> {
         selectedRowId: state.editor.draft?.rows[selectedEditorRowIndex]?.rowId ?? null,
         selectedValueId:
           state.editor.draft?.rows[selectedEditorRowIndex]?.values[Math.max(0, selectedEditorValueIndex)]?.id ?? null,
+        selectedEnvironmentId:
+          state.editor.draft?.environments[Math.max(0, selectedEditorEnvironmentIndex)]?.id ?? null,
         keyEditBuffer,
         valueEditBuffer,
         statusMessage: state.status.message ?? "Ready",
@@ -94,6 +98,32 @@ async function startTuiApp(): Promise<void> {
     const row = selectedEditorRow();
     const max = Math.max(0, (row?.values.length ?? 1) - 1);
     selectedEditorValueIndex = Math.min(Math.max(0, selectedEditorValueIndex), max);
+  };
+
+  const normalizeSelectedEnvironmentIndex = () => {
+    const draft = store.getState().editor.draft;
+    const max = Math.max(0, (draft?.environments.length ?? 1) - 1);
+    selectedEditorEnvironmentIndex = Math.min(Math.max(0, selectedEditorEnvironmentIndex), max);
+  };
+
+  const assignmentBlockReasonMessage = (reason: AssignmentBlockReason): string => {
+    if (reason === "custom_environment_unsupported") {
+      return "Custom environment assignment edits are unsupported by this CLI capability set.";
+    }
+
+    if (reason === "branch_unsupported") {
+      return "Row includes branch-specific values and assignments are read-only in this CLI mode.";
+    }
+
+    if (reason === "row_encrypted") {
+      return "Row includes encrypted values and assignments are read-only.";
+    }
+
+    if (reason === "environment_missing") {
+      return "Selected environment is no longer available.";
+    }
+
+    return "Selected value is no longer available.";
   };
 
   const setStatusMessage = (message: string | null, error: string | null = null) => {
@@ -204,6 +234,7 @@ async function startTuiApp(): Promise<void> {
       editorScrollOffset = 0;
       selectedEditorRowIndex = 0;
       selectedEditorValueIndex = 0;
+      selectedEditorEnvironmentIndex = 0;
       keyEditBuffer = null;
       valueEditBuffer = null;
       store.transitionTo("editor");
@@ -312,6 +343,7 @@ async function startTuiApp(): Promise<void> {
 
     const draft = state.editor.draft;
     const rows = draft?.rows ?? [];
+    const environments = draft?.environments ?? [];
     const rowCount = rows.length;
 
     const commitKeyEdit = () => {
@@ -453,6 +485,7 @@ async function startTuiApp(): Promise<void> {
     if (sequence === "j" || sequence === "\u001b[B") {
       selectedEditorRowIndex = Math.min(selectedEditorRowIndex + 1, Math.max(0, rowCount - 1));
       normalizeSelectedValueIndex();
+      normalizeSelectedEnvironmentIndex();
       if (selectedEditorRowIndex > editorScrollOffset + 9) {
         editorScrollOffset = selectedEditorRowIndex - 9;
       }
@@ -463,6 +496,7 @@ async function startTuiApp(): Promise<void> {
     if (sequence === "k" || sequence === "\u001b[A") {
       selectedEditorRowIndex = Math.max(0, selectedEditorRowIndex - 1);
       normalizeSelectedValueIndex();
+      normalizeSelectedEnvironmentIndex();
       if (selectedEditorRowIndex < editorScrollOffset) {
         editorScrollOffset = selectedEditorRowIndex;
       }
@@ -484,6 +518,19 @@ async function startTuiApp(): Promise<void> {
 
     if (sequence === "h" || sequence === "\u001b[D") {
       selectedEditorValueIndex = Math.max(0, selectedEditorValueIndex - 1);
+      renderCurrentScreen();
+      return true;
+    }
+
+    if (sequence === "[") {
+      selectedEditorEnvironmentIndex = Math.max(0, selectedEditorEnvironmentIndex - 1);
+      renderCurrentScreen();
+      return true;
+    }
+
+    if (sequence === "]") {
+      const max = Math.max(0, environments.length - 1);
+      selectedEditorEnvironmentIndex = Math.min(max, selectedEditorEnvironmentIndex + 1);
       renderCurrentScreen();
       return true;
     }
@@ -572,6 +619,81 @@ async function startTuiApp(): Promise<void> {
       return true;
     }
 
+    if (sequence === "s" || sequence === "S") {
+      const selectedRow = rows[selectedEditorRowIndex];
+      const selectedValue = selectedRow?.values[Math.max(0, selectedEditorValueIndex)];
+      const selectedEnvironment = environments[Math.max(0, selectedEditorEnvironmentIndex)];
+
+      if (!draft || !selectedRow || !selectedEnvironment) {
+        return true;
+      }
+
+      if (!selectedValue) {
+        setStatusMessage("No value selected. Press a to add one.");
+        renderCurrentScreen();
+        return true;
+      }
+
+      const permission = canEditAssignment(draft, selectedRow, selectedEnvironment.id);
+      if (!permission.allowed && permission.reason) {
+        setStatusMessage(assignmentBlockReasonMessage(permission.reason));
+        renderCurrentScreen();
+        return true;
+      }
+
+      const nextDraft = setRowAssignment(draft, selectedRow.rowId, selectedEnvironment.id, selectedValue.id);
+      if (!nextDraft.updated) {
+        setStatusMessage(`Assignment for ${selectedEnvironment.name} already set to this value.`);
+        renderCurrentScreen();
+        return true;
+      }
+
+      store.patchState({
+        editor: {
+          ...state.editor,
+          draft: nextDraft.draft,
+        },
+      });
+
+      setStatusMessage(`Set ${selectedEnvironment.name} to V${selectedEditorValueIndex + 1}.`);
+      renderCurrentScreen();
+      return true;
+    }
+
+    if (sequence === "u" || sequence === "U") {
+      const selectedRow = rows[selectedEditorRowIndex];
+      const selectedEnvironment = environments[Math.max(0, selectedEditorEnvironmentIndex)];
+
+      if (!draft || !selectedRow || !selectedEnvironment) {
+        return true;
+      }
+
+      const permission = canEditAssignment(draft, selectedRow, selectedEnvironment.id);
+      if (!permission.allowed && permission.reason) {
+        setStatusMessage(assignmentBlockReasonMessage(permission.reason));
+        renderCurrentScreen();
+        return true;
+      }
+
+      const nextDraft = setRowAssignment(draft, selectedRow.rowId, selectedEnvironment.id, null);
+      if (!nextDraft.updated) {
+        setStatusMessage(`${selectedEnvironment.name} is already unset.`);
+        renderCurrentScreen();
+        return true;
+      }
+
+      store.patchState({
+        editor: {
+          ...state.editor,
+          draft: nextDraft.draft,
+        },
+      });
+
+      setStatusMessage(`Unset ${selectedEnvironment.name} assignment.`);
+      renderCurrentScreen();
+      return true;
+    }
+
     return false;
   });
 
@@ -583,7 +705,7 @@ async function startTuiApp(): Promise<void> {
         process.exit(0);
       },
       onHelp: () => {
-        process.stderr.write("Keys: q quit, r refresh auth, tab scope, j/k project, enter continue, h/l value, a add, v edit, x delete\n");
+        process.stderr.write("Keys: q quit, r refresh auth, tab scope, j/k project, enter continue, h/l value, [/ ] env, a add, v edit, x delete, s set, u unset\n");
       },
       onRefresh: () => {
         void refreshAuthStatus();

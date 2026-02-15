@@ -231,7 +231,7 @@
         "Unset state is supported",
         "Capability-gated cells are read-only"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 19,

@@ -7,6 +7,7 @@ export interface EditorScreenModel {
   scrollOffset: number;
   selectedRowId: string | null;
   selectedValueId: string | null;
+  selectedEnvironmentId: string | null;
   keyEditBuffer: string | null;
   valueEditBuffer: string | null;
   statusMessage: string;
@@ -27,8 +28,10 @@ function assignmentLabel(valueId: string | null, row: EnvMatrixDraft["rows"][num
 
 function rowLine(
   row: EnvMatrixDraft["rows"][number],
+  environments: EnvMatrixDraft["environments"],
   selectedRowId: string | null,
   selectedValueId: string | null,
+  selectedEnvironmentId: string | null,
 ): string {
   const values = row.values
     .map((value, index) => {
@@ -36,16 +39,21 @@ function rowLine(
       return `V${index + 1}${marker}:${value.content}`;
     })
     .join(" | ");
-  const prod = assignmentLabel(row.assignments.production, row);
-  const prev = assignmentLabel(row.assignments.preview, row);
-  const dev = assignmentLabel(row.assignments.development, row);
+  const assignments = environments
+    .map((environment) => {
+      const selected = environment.id === selectedEnvironmentId && row.rowId === selectedRowId ? "*" : "";
+      const label = assignmentLabel(row.assignments[environment.id], row);
+      return `${selected}${environment.name}:${label}`;
+    })
+    .join(" ");
 
   const marker = row.rowId === selectedRowId ? ">" : " ";
-  return `${marker} ${row.key} | ${values || "-"} | P:${prod} Pr:${prev} D:${dev}`;
+  return `${marker} ${row.key} | ${values || "-"} | ${assignments}`;
 }
 
 export function EditorScreen(model: EditorScreenModel) {
   const rows = model.draft?.rows ?? [];
+  const environments = model.draft?.environments ?? [];
   const pageSize = 10;
   const safeOffset = Math.max(0, Math.min(model.scrollOffset, Math.max(0, rows.length - pageSize)));
   const visibleRows = rows.slice(safeOffset, safeOffset + pageSize);
@@ -60,11 +68,15 @@ export function EditorScreen(model: EditorScreenModel) {
       borderStyle: "rounded",
     },
     Text({ content: "Matrix Editor" }),
-    Text({ content: "Key | Values | Production | Preview | Development" }),
+    Text({ content: `Key | Values | ${environments.map((environment) => environment.name).join(" | ") || "Assignments"}` }),
     Text({
       content:
         visibleRows.length > 0
-          ? visibleRows.map((row) => rowLine(row, model.selectedRowId, model.selectedValueId)).join("\n")
+          ? visibleRows
+              .map((row) =>
+                rowLine(row, environments, model.selectedRowId, model.selectedValueId, model.selectedEnvironmentId),
+              )
+              .join("\n")
           : "No rows",
     }),
     Text({ content: `Rows ${safeOffset + 1}-${Math.min(safeOffset + pageSize, rows.length)} of ${rows.length}` }),
@@ -75,7 +87,7 @@ export function EditorScreen(model: EditorScreenModel) {
           ? `Editing key: ${model.keyEditBuffer}`
           : model.valueEditBuffer !== null
             ? `Editing value: ${model.valueEditBuffer}`
-            : "Keys: j/k row, h/l value, e key, a add value, v edit value, x delete value, q quit",
+            : "Keys: j/k row, h/l value, [/ ] env, e key, a add value, v edit value, x delete value, s set, u unset, q quit",
     }),
   );
 }

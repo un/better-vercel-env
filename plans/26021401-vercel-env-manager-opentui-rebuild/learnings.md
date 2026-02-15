@@ -2,6 +2,11 @@
 
 Use this file as a prepend-only log.
 
+## 2026-02-14 20:20 - Step 18 - Assignment edit capability gates
+- Context: Adding terminal controls for set/unset environment assignments.
+- Learning: Assignment edits must share the same lock rules as web parity: block when row has encrypted values, block branch-scoped rows when branch writes are unsupported, and block custom environments when custom writes are unsupported.
+- Impact: Reuse one permission check path for assignment actions and future cell-level edit UX.
+
 ## 2026-02-14 20:18 - Step 17 - Value ID allocation after deletions
 - Context: Implementing add/remove value pool editing in the terminal editor.
 - Learning: Generating new value IDs from `values.length + 1` can create duplicate IDs after deleting non-tail values; allocation must use max existing numeric suffix + 1.
