@@ -63,7 +63,7 @@
         "Renderer can initialize",
         "Startup exits with clear errors when failing"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 5,

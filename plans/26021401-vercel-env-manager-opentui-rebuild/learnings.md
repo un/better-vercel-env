@@ -2,6 +2,11 @@
 
 Use this file as a prepend-only log.
 
+## 2026-02-14 19:52 - Step 4 - Entrypoint smoke output behavior
+- Context: Running a one-shot OpenTUI initialization smoke test.
+- Learning: Even short-lived renderer startup emits terminal control sequences; smoke checks should use a dedicated env flag and can redirect output in automation.
+- Impact: Keep `VBE_TUI_SMOKE=1` path and avoid noisy terminal assertions in verify.
+
 ## 2026-02-14 19:50 - Step 3 - TypeScript compatibility for Bun-only deps
 - Context: Verifying project typecheck after adding `@opentui/core`.
 - Learning: OpenTUI dependency declarations reference `bun:ffi`; Node-oriented `tsc --noEmit` needs a local module shim to keep strict checks passing without switching global type roots.
