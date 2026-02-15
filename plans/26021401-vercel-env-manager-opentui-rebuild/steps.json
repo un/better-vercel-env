@@ -1,0 +1,501 @@
+{
+  "planId": "26021401",
+  "planSlug": "vercel-env-manager-opentui-rebuild",
+  "planFile": "plans/26021401-vercel-env-manager-opentui-rebuild.md",
+  "title": "OpenTUI Rebuild Execution Steps",
+  "createdAt": "2026-02-14",
+  "executionProtocol": {
+    "beforeEachStep": [
+      "Read plans/26021401-vercel-env-manager-opentui-rebuild/learnings.md before starting.",
+      "Confirm prior learnings are applied when relevant.",
+      "Keep scope strict to the current step only."
+    ],
+    "afterEachStep": [
+      "Run project verification command(s) and confirm pass/fail.",
+      "Prepend new actionable learning to learnings.md if discovered.",
+      "Mark completed=true only when success factors are met."
+    ]
+  },
+  "steps": [
+    {
+      "serial": 1,
+      "name": "Inventory current feature parity",
+      "description": "Document all existing user-facing flows and safety rules that must survive the platform rebuild.",
+      "guidance": "Use current app routes, CLI behavior, and editor features as the parity baseline.",
+      "successFactors": [
+        "Feature parity checklist is written",
+        "Safety invariants are explicitly listed",
+        "Known current bugs/quirks are captured"
+      ],
+      "completed": true
+    },
+    {
+      "serial": 2,
+      "name": "Decide OpenTUI binding strategy",
+      "description": "Choose between OpenTUI core constructs and OpenTUI React binding for implementation.",
+      "guidance": "Prefer the least abstraction that keeps state and focus control predictable.",
+      "successFactors": [
+        "Choice is documented with rationale",
+        "Chosen approach compiles in a spike",
+        "No conflicting UI runtime paths remain"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 3,
+      "name": "Add OpenTUI runtime dependencies",
+      "description": "Install OpenTUI packages and align runtime requirements for terminal execution.",
+      "guidance": "Pin versions and avoid adding optional packages not required for v1 parity.",
+      "successFactors": [
+        "Dependencies install cleanly",
+        "Lockfile updates are deterministic",
+        "No unnecessary UI frameworks added"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 4,
+      "name": "Define TUI app entrypoint",
+      "description": "Create a dedicated terminal app entrypoint separate from web runtime assumptions.",
+      "guidance": "Place it in a stable path and ensure package scripts can launch it reliably.",
+      "successFactors": [
+        "Entrypoint file exists",
+        "Renderer can initialize",
+        "Startup exits with clear errors when failing"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 5,
+      "name": "Set renderer lifecycle and shutdown",
+      "description": "Implement startup and graceful shutdown behavior for Ctrl+C and termination signals.",
+      "guidance": "Ensure renderer cleanup always runs and terminal state is restored.",
+      "successFactors": [
+        "Ctrl+C exits cleanly",
+        "No hung process remains",
+        "Terminal state is restored"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 6,
+      "name": "Create global app state model",
+      "description": "Define top-level state for screen flow, loading, errors, and editor context.",
+      "guidance": "Keep state serializable and explicit; avoid hidden mutable globals.",
+      "successFactors": [
+        "State interfaces are typed",
+        "Transitions are explicit",
+        "State can reset predictably"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 7,
+      "name": "Implement screen state machine",
+      "description": "Model navigation between auth, picker, editor, confirm, and report states.",
+      "guidance": "Use explicit transition functions and guard invalid transitions.",
+      "successFactors": [
+        "All expected screens are represented",
+        "Invalid transitions are blocked",
+        "Back navigation is deterministic"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 8,
+      "name": "Add global key bindings",
+      "description": "Implement app-wide keyboard shortcuts for quit/help/refresh where appropriate.",
+      "guidance": "Avoid conflicts with text input controls and document keymap.",
+      "successFactors": [
+        "Quit shortcut works",
+        "Help/key hints are discoverable",
+        "Input fields are not hijacked"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 9,
+      "name": "Build auth status screen",
+      "description": "Render CLI auth status from `vercel whoami` with actionable next steps.",
+      "guidance": "Show clear remediation for not-installed and not-logged-in states.",
+      "successFactors": [
+        "Authenticated state is shown",
+        "Unauthenticated state has clear guidance",
+        "Refresh action works"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 10,
+      "name": "Load scopes via CLI adapters",
+      "description": "Integrate personal and team scope retrieval for picker flow.",
+      "guidance": "Reuse existing `vercel-cli` adapters and normalize ordering.",
+      "successFactors": [
+        "Personal scope appears",
+        "Team scopes appear when available",
+        "Errors are surfaced without crashing"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 11,
+      "name": "Load projects via CLI adapters",
+      "description": "Integrate project listing for selected scope with search support.",
+      "guidance": "Use debounced search and stable sorted rendering.",
+      "successFactors": [
+        "Projects list loads for scope",
+        "Search filters results",
+        "Empty/error states are clear"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 12,
+      "name": "Implement scope and project picker UI",
+      "description": "Build terminal picker screen for selecting target scope and project.",
+      "guidance": "Prioritize keyboard-only operation and visible selection state.",
+      "successFactors": [
+        "Scope selection is possible",
+        "Project selection is possible",
+        "Continue action advances state"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 13,
+      "name": "Integrate snapshot load orchestration",
+      "description": "Load project snapshot using CLI pull plus topology list before entering editor.",
+      "guidance": "Preserve temp-file cleanup and workspace locking semantics.",
+      "successFactors": [
+        "Snapshot load succeeds for selected project",
+        "Temp files are removed",
+        "Load errors are recoverable"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 14,
+      "name": "Normalize snapshot into editor draft",
+      "description": "Initialize draft/baseline state using existing normalization pipeline.",
+      "guidance": "Retain target-group parity and value identity semantics.",
+      "successFactors": [
+        "Draft initializes from snapshot",
+        "Baseline hash is retained",
+        "No phantom changes on initial load"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 15,
+      "name": "Render matrix skeleton in terminal",
+      "description": "Create editor layout with key/value/target columns and row navigation.",
+      "guidance": "Support horizontal and vertical scrolling for large datasets.",
+      "successFactors": [
+        "Matrix headers render correctly",
+        "Rows render correctly",
+        "Scrolling keeps context usable"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 16,
+      "name": "Implement key editing interactions",
+      "description": "Allow editing row key names with validation and conflict prevention.",
+      "guidance": "Reflect changes immediately in change detection.",
+      "successFactors": [
+        "Keys can be edited",
+        "Invalid edits are blocked or warned",
+        "State remains consistent"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 17,
+      "name": "Implement value pool editing",
+      "description": "Support add/edit/remove value entries per key row.",
+      "guidance": "Prevent removing values that are still assigned by environments.",
+      "successFactors": [
+        "Values can be added",
+        "Values can be edited",
+        "Unsafe deletion is prevented"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 18,
+      "name": "Implement environment assignment editing",
+      "description": "Enable setting each environment target to a selected value or unset.",
+      "guidance": "Respect capability flags for unsupported environments/features.",
+      "successFactors": [
+        "Assignments update correctly",
+        "Unset state is supported",
+        "Capability-gated cells are read-only"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 19,
+      "name": "Add change highlighting",
+      "description": "Visually mark changed rows/cells relative to baseline.",
+      "guidance": "Keep visual language consistent and readable in terminal palette.",
+      "successFactors": [
+        "Changed fields are distinguishable",
+        "Unchanged fields remain neutral",
+        "Highlighting updates live"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 20,
+      "name": "Implement live change planning",
+      "description": "Run planner on draft updates and surface pending operations.",
+      "guidance": "Keep deterministic ordering and no-op behavior stable.",
+      "successFactors": [
+        "No-op drafts show zero operations",
+        "Edits produce expected operations",
+        "Ordering is deterministic"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 21,
+      "name": "Build change log panel",
+      "description": "Render labeled change log with latest operations at the top.",
+      "guidance": "Include compact kind badges and concise operation summaries.",
+      "successFactors": [
+        "Panel has clear label",
+        "Latest-first ordering is correct",
+        "Empty state message is clear"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 22,
+      "name": "Implement per-row undo",
+      "description": "Enable undo action for operation entries by reverting row draft state.",
+      "guidance": "Ensure undo updates both matrix and operation list immediately.",
+      "successFactors": [
+        "Undo works for edited rows",
+        "Operation list updates instantly",
+        "No corrupted state after repeated undo"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 23,
+      "name": "Add confirm gate interaction",
+      "description": "Require exact confirmation phrase before apply can proceed.",
+      "guidance": "Match existing phrase semantics exactly.",
+      "successFactors": [
+        "Incorrect phrase blocks apply",
+        "Exact phrase enables apply",
+        "Gate resets after apply/cancel"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 24,
+      "name": "Wire apply request pipeline",
+      "description": "Execute planned operations through CLI adapter apply builder/executor.",
+      "guidance": "Keep deterministic add/remove order and per-item status reporting.",
+      "successFactors": [
+        "Apply executes operations",
+        "Per-item statuses are returned",
+        "Skipped reasons are explicit"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 25,
+      "name": "Enforce baseline conflict checks",
+      "description": "Revalidate snapshot hash before apply and block drifted writes.",
+      "guidance": "Provide actionable conflict message and reload path.",
+      "successFactors": [
+        "Hash mismatch blocks apply",
+        "Conflict message is actionable",
+        "No writes happen on conflict"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 26,
+      "name": "Add in-flight apply lock",
+      "description": "Prevent concurrent applies for the same project/scope context.",
+      "guidance": "Use lock key semantics equivalent to current implementation.",
+      "successFactors": [
+        "Concurrent apply attempts are blocked",
+        "Lock is released reliably",
+        "Conflict response is clear"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 27,
+      "name": "Render apply report UI",
+      "description": "Display grouped done/failed/skipped results with concise details.",
+      "guidance": "Make failed reasons easy to inspect without overwhelming the screen.",
+      "successFactors": [
+        "Status groups are visible",
+        "Failed reasons are readable",
+        "Report updates per apply run"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 28,
+      "name": "Refresh snapshot after successful apply",
+      "description": "Reload project snapshot after successful apply and reset draft baseline.",
+      "guidance": "Preserve selected project context while refreshing data.",
+      "successFactors": [
+        "Refresh runs after success",
+        "Pending operations clear",
+        "Editor reflects latest server state"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 29,
+      "name": "Retain failed operation retry flow",
+      "description": "Keep failed items visible and retryable without discarding draft context.",
+      "guidance": "Do not force full-screen reset on partial failures.",
+      "successFactors": [
+        "Failed ops remain visible",
+        "User can retry after edits",
+        "Successful ops are not retried unnecessarily"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 30,
+      "name": "Preserve hidden/reserved key policy",
+      "description": "Enforce hidden and ignored runtime keys in both snapshot and apply paths.",
+      "guidance": "Apply exact-key and prefix rules consistently.",
+      "successFactors": [
+        "Reserved keys are not shown in editor",
+        "Reserved key operations are skipped",
+        "Policy docs remain accurate"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 31,
+      "name": "Preserve env topology parity",
+      "description": "Keep target-group topology aligned with Vercel env rows (including split groups for same key).",
+      "guidance": "Use `vercel env ls` topology merged with pull values.",
+      "successFactors": [
+        "IN_ALL-style split groups are represented correctly",
+        "No incorrect target collapsing",
+        "Planner behavior matches topology"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 32,
+      "name": "Keep stdin write safety",
+      "description": "Ensure apply writes do not mutate values with unintended newline or whitespace artifacts.",
+      "guidance": "Send raw stdin value, sanitize only logs/errors.",
+      "successFactors": [
+        "No trailing newline corruption",
+        "Secrets are redacted in errors",
+        "Smoke test confirms raw value parity"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 33,
+      "name": "Add terminal layout responsiveness",
+      "description": "Implement narrow and wide terminal layouts with graceful degradation.",
+      "guidance": "Switch from side panel to stacked panel based on available width.",
+      "successFactors": [
+        "Wide layout uses split panes",
+        "Narrow layout remains usable",
+        "No clipped critical controls"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 34,
+      "name": "Add contextual key hints",
+      "description": "Show persistent keyboard hint footer based on active screen mode.",
+      "guidance": "Keep hints concise and context-aware.",
+      "successFactors": [
+        "Hints are visible",
+        "Hints match active controls",
+        "No noisy or stale hints"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 35,
+      "name": "Remove Next.js runtime paths",
+      "description": "Delete or archive web-only pages, route handlers, and server plumbing not needed by TUI.",
+      "guidance": "Keep reusable domain modules; remove only runtime-specific web layers.",
+      "successFactors": [
+        "No active dependency on Next routes/pages",
+        "TUI runs without web server",
+        "Dead web runtime code is removed"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 36,
+      "name": "Update package scripts and bin",
+      "description": "Point package CLI and scripts to the OpenTUI runtime commands.",
+      "guidance": "Keep one primary user command and clear dev/verify scripts.",
+      "successFactors": [
+        "Bin launches TUI",
+        "Dev script launches TUI",
+        "Verify script still enforces quality checks"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 37,
+      "name": "Expand test coverage for rebuild",
+      "description": "Add tests for new parsers/state transitions and preserve core planner/apply tests.",
+      "guidance": "Prioritize parity-sensitive cases and regression fixtures.",
+      "successFactors": [
+        "Parser topology tests exist",
+        "State transition tests exist",
+        "Core domain regression tests still pass"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 38,
+      "name": "Add manual smoke checklist",
+      "description": "Create reproducible manual test checklist including safe write cycles on `wiggy`.",
+      "guidance": "Include add/verify/remove/verify and cleanup instructions.",
+      "successFactors": [
+        "Checklist is documented",
+        "Covers auth/read/write/report flows",
+        "Cleanup steps are explicit"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 39,
+      "name": "Update README for TUI usage",
+      "description": "Rewrite quickstart, controls, and troubleshooting for terminal-only workflow.",
+      "guidance": "Remove stale web onboarding references and keep examples copy-pastable.",
+      "successFactors": [
+        "README reflects OpenTUI runtime",
+        "Auth instructions are accurate",
+        "Known limitations are documented"
+      ],
+      "completed": false
+    },
+    {
+      "serial": 40,
+      "name": "Run final verification and release checklist",
+      "description": "Execute full verify pipeline and final parity walkthrough before release tagging.",
+      "guidance": "Treat any parity mismatch as blocker and document caveats explicitly.",
+      "successFactors": [
+        "All verification checks pass",
+        "Manual parity checklist passes",
+        "Final risks/caveats are documented"
+      ],
+      "completed": false
+    }
+  ]
+}
