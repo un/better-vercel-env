@@ -3,9 +3,11 @@ import { pathToFileURL } from "node:url";
 
 import { getVercelCliAuthStatus } from "@/lib/vercel-cli";
 
+import { loadScopesFromCli } from "./data/scopes";
 import { handleGlobalKeySequence } from "./keyboard/global-keys";
 import { registerRendererLifecycle } from "./lifecycle";
 import { AuthScreen, type AuthScreenModel } from "./screens/auth-screen";
+import { createTuiStore } from "./state";
 
 function replaceRootContent(renderer: Awaited<ReturnType<typeof createCliRenderer>>, content: unknown): void {
   const existingChildren = [...renderer.root.getChildren()];
@@ -19,6 +21,7 @@ async function startTuiApp(): Promise<void> {
   const renderer = await createCliRenderer({
     exitOnCtrlC: true,
   });
+  const store = createTuiStore();
   const lifecycle = registerRendererLifecycle(renderer);
 
   const authScreenModel: AuthScreenModel = {
@@ -48,6 +51,22 @@ async function startTuiApp(): Promise<void> {
     authScreenModel.activeScope = status.identity?.activeScope ?? null;
     authScreenModel.message = status.message;
     authScreenModel.error = null;
+
+    if (status.authenticated) {
+      try {
+        const scopes = await loadScopesFromCli();
+        store.patchState({
+          scopes,
+          selection: {
+            scopeId: scopes[0]?.id ?? null,
+            projectId: null,
+          },
+        });
+        authScreenModel.message = `CLI session active. Loaded ${scopes.length} scope${scopes.length === 1 ? "" : "s"}.`;
+      } catch (error) {
+        authScreenModel.error = error instanceof Error ? error.message : "Unable to load scopes.";
+      }
+    }
 
     renderAuth();
   };

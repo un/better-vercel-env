@@ -135,7 +135,7 @@
         "Team scopes appear when available",
         "Errors are surfaced without crashing"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 11,
