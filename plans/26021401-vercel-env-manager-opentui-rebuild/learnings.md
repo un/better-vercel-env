@@ -2,6 +2,11 @@
 
 Use this file as a prepend-only log.
 
+## 2026-02-14 20:25 - Step 21 - Keep testable UI formatters decoupled from OpenTUI
+- Context: Adding change-log formatting tests for latest-first ordering and empty state copy.
+- Learning: Helper functions imported by Vitest should live in modules that do not import `@opentui/core`; otherwise Node test runtime can fail on Bun-specific dependencies.
+- Impact: Keep screen-rendering code and pure text-formatting helpers split for stable unit testing.
+
 ## 2026-02-14 20:23 - Step 20 - Runtime import paths in TUI helper tests
 - Context: Adding live planner wrapper tests under `src/tui/editor`.
 - Learning: Runtime imports from new test-executed helpers should use relative module paths; alias-based runtime imports in this area can fail in Vitest even when type-only alias imports pass.

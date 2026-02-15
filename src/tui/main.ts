@@ -82,7 +82,7 @@ async function startTuiApp(): Promise<void> {
           state.editor.draft?.environments[Math.max(0, selectedEditorEnvironmentIndex)]?.id ?? null,
         keyEditBuffer,
         valueEditBuffer,
-        pendingOperationCount: state.editor.pendingOperations.length,
+        pendingOperations: state.editor.pendingOperations,
         statusMessage: state.status.message ?? "Ready",
       }),
     );

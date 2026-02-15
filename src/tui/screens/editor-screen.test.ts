@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import type { EnvMatrixDraft } from "@/lib/env-model";
 
+import { formatChangeLogLines } from "./change-log";
+
 function makeDraft(): EnvMatrixDraft {
   return {
     projectId: "prj_1",
@@ -48,5 +50,35 @@ describe("editor screen model", () => {
     const draft = makeDraft();
     expect(draft.rows[0]?.assignments.production).toBe("value-1");
     expect(draft.rows[0]?.assignments.development).toBeNull();
+  });
+
+  it("formats change log in latest-first order", () => {
+    const lines = formatChangeLogLines([
+      {
+        id: "a",
+        kind: "create_env",
+        summary: "Create alpha",
+        rowId: "row:1",
+        before: null,
+        after: null,
+        undoToken: "undo:a",
+      },
+      {
+        id: "b",
+        kind: "update_env",
+        summary: "Update beta",
+        rowId: "row:2",
+        before: null,
+        after: null,
+        undoToken: "undo:b",
+      },
+    ]);
+
+    expect(lines[0]).toBe("[UPD] Update beta");
+    expect(lines[1]).toBe("[CRT] Create alpha");
+  });
+
+  it("formats empty change log message", () => {
+    expect(formatChangeLogLines([])).toEqual(["No pending operations."]);
   });
 });

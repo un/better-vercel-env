@@ -267,7 +267,7 @@
         "Latest-first ordering is correct",
         "Empty state message is clear"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 22,

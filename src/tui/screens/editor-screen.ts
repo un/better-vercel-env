@@ -1,6 +1,8 @@
 import { Box, Text } from "@opentui/core";
 
-import type { EnvMatrixDraft } from "@/lib/env-model";
+import type { EnvMatrixDraft, EnvOperation } from "@/lib/env-model";
+
+import { formatChangeLogLines } from "./change-log";
 
 export interface EditorScreenModel {
   baseline: EnvMatrixDraft | null;
@@ -11,7 +13,7 @@ export interface EditorScreenModel {
   selectedEnvironmentId: string | null;
   keyEditBuffer: string | null;
   valueEditBuffer: string | null;
-  pendingOperationCount: number;
+  pendingOperations: EnvOperation[];
   statusMessage: string;
 }
 
@@ -72,6 +74,7 @@ export function EditorScreen(model: EditorScreenModel) {
   const rows = model.draft?.rows ?? [];
   const environments = model.draft?.environments ?? [];
   const baselineRowsById = new Map((model.baseline?.rows ?? []).map((row) => [row.rowId, row]));
+  const changeLog = formatChangeLogLines(model.pendingOperations);
   const pageSize = 10;
   const safeOffset = Math.max(0, Math.min(model.scrollOffset, Math.max(0, rows.length - pageSize)));
   const visibleRows = rows.slice(safeOffset, safeOffset + pageSize);
@@ -105,7 +108,8 @@ export function EditorScreen(model: EditorScreenModel) {
           : "No rows",
     }),
     Text({ content: `Rows ${safeOffset + 1}-${Math.min(safeOffset + pageSize, rows.length)} of ${rows.length}` }),
-    Text({ content: `Pending operations: ${model.pendingOperationCount}` }),
+    Text({ content: "Change Log" }),
+    Text({ content: changeLog.join("\n") }),
     Text({ content: "Legend: ! changed, * active selection" }),
     Text({ content: `Status: ${model.statusMessage}` }),
     Text({
