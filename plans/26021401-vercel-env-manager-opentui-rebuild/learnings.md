@@ -2,6 +2,11 @@
 
 Use this file as a prepend-only log.
 
+## 2026-02-14 19:50 - Step 3 - TypeScript compatibility for Bun-only deps
+- Context: Verifying project typecheck after adding `@opentui/core`.
+- Learning: OpenTUI dependency declarations reference `bun:ffi`; Node-oriented `tsc --noEmit` needs a local module shim to keep strict checks passing without switching global type roots.
+- Impact: Keep `src/types/bun-ffi.d.ts` in place until the toolchain is fully Bun-native.
+
 ## 2026-02-14 19:45 - Step 2 - OpenTUI build command details
 - Context: Validating OpenTUI core spike compilation with Bun.
 - Learning: `bun build` must use `--target bun` for OpenTUI (`bun:ffi` imports), and `--outdir` instead of single `--outfile` due emitted assets.

@@ -51,7 +51,7 @@
         "Lockfile updates are deterministic",
         "No unnecessary UI frameworks added"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 4,
