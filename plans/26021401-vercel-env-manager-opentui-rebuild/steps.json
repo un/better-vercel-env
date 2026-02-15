@@ -303,7 +303,7 @@
         "Per-item statuses are returned",
         "Skipped reasons are explicit"
       ],
-      "completed": false
+      "completed": true
     },
     {
       "serial": 25,

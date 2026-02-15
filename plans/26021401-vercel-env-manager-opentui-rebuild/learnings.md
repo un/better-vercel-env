@@ -2,6 +2,11 @@
 
 Use this file as a prepend-only log.
 
+## 2026-02-14 20:30 - Step 24 - Execute apply inside workspace lock boundary
+- Context: Wiring confirm flow to build CLI actions and execute `vercel env` mutations.
+- Learning: The same workspace lock boundary should wrap link + apply execution to keep deterministic command ordering and avoid concurrent workspace state races.
+- Impact: Keep all CLI write phases in one `withWorkspaceLock` section for future apply retries/refresh flows.
+
 ## 2026-02-14 20:28 - Step 23 - Reuse shared confirm phrase source
 - Context: Implementing confirm screen typing gate before apply actions.
 - Learning: Use the shared `isApplyConfirmPhraseValid` helper and phrase constant to avoid drift in exact-phrase semantics between web and TUI flows.

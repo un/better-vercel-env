@@ -6,6 +6,7 @@ import { normalizeSnapshotToDraft, type EnvMatrixDraft } from "@/lib/env-model";
 import { APPLY_CONFIRM_PHRASE, isApplyConfirmPhraseValid } from "@/components/editor/confirm-gate";
 
 import { loadProjectsFromCli } from "./data/projects";
+import { executeApplyForSelection } from "./data/apply";
 import { loadScopesFromCli } from "./data/scopes";
 import { loadSnapshotForSelection } from "./data/snapshot";
 import { canEditAssignment, setRowAssignment, type AssignmentBlockReason } from "./editor/assignments";
@@ -347,6 +348,35 @@ async function startTuiApp(): Promise<void> {
   };
 
   renderCurrentScreen();
+
+  const runApplyPipeline = async () => {
+    const state = store.getState();
+    if (!state.selection.projectId || !state.selection.scopeId) {
+      setStatusMessage("Missing project or scope selection for apply.");
+      renderCurrentScreen();
+      return;
+    }
+
+    setStatusMessage(`Applying ${state.editor.pendingOperations.length} operation(s)...`);
+    renderCurrentScreen();
+
+    try {
+      const report = await executeApplyForSelection({
+        projectId: state.selection.projectId,
+        scopeId: state.selection.scopeId,
+        operations: state.editor.pendingOperations,
+      });
+
+      store.patchState({ applyReport: report });
+      store.transitionTo("report");
+      setStatusMessage("Apply finished.");
+    } catch (error) {
+      setStatusMessage(null, error instanceof Error ? error.message : "Apply failed.");
+      store.transitionTo("editor");
+    }
+
+    renderCurrentScreen();
+  };
 
   renderer.addInputHandler((sequence) => {
     const state = store.getState();
@@ -771,15 +801,7 @@ async function startTuiApp(): Promise<void> {
       }
 
       confirmInput = "";
-      store.patchState({
-        applyReport: {
-          accepted: state.editor.pendingOperations.length,
-          results: [],
-        },
-      });
-      store.transitionTo("report");
-      setStatusMessage("Confirmation accepted. Apply pipeline wiring is next.");
-      renderCurrentScreen();
+      void runApplyPipeline();
       return true;
     }
 
