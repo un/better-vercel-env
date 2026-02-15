@@ -377,8 +377,45 @@ async function startTuiApp(): Promise<void> {
       });
 
       store.patchState({ applyReport: report });
+      const hasFailure = report.results.some((result) => result.status === "failed");
+
+      if (!hasFailure) {
+        setStatusMessage("Apply finished. Refreshing snapshot...");
+        renderCurrentScreen();
+
+        try {
+          const snapshot = await loadSnapshotForSelection(state.selection.projectId, state.selection.scopeId);
+          const normalized = normalizeSnapshotToDraft(snapshot);
+          const currentState = store.getState();
+
+          store.patchState({
+            editor: {
+              ...currentState.editor,
+              snapshot,
+              baseline: normalized,
+              draft: structuredClone(normalized),
+              pendingOperations: [],
+            },
+          });
+
+          editorScrollOffset = 0;
+          selectedEditorRowIndex = 0;
+          selectedEditorValueIndex = 0;
+          selectedEditorEnvironmentIndex = 0;
+          keyEditBuffer = null;
+          valueEditBuffer = null;
+        } catch (refreshError) {
+          setStatusMessage(
+            null,
+            refreshError instanceof Error
+              ? `Apply completed but refresh failed: ${refreshError.message}`
+              : "Apply completed but refresh failed.",
+          );
+        }
+      }
+
       store.transitionTo("report");
-      setStatusMessage("Apply finished.");
+      setStatusMessage(hasFailure ? "Apply finished with failures." : "Apply finished and snapshot refreshed.");
     } catch (error) {
       if (error instanceof ApplyLockConflictError || error instanceof BaselineConflictError) {
         setStatusMessage(error.message);

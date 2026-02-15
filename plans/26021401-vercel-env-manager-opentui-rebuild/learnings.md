@@ -2,6 +2,11 @@
 
 Use this file as a prepend-only log.
 
+## 2026-02-14 20:33 - Step 28 - Refresh only on fully successful apply runs
+- Context: Auto-reloading snapshot and resetting draft after apply.
+- Learning: Snapshot refresh/reset should run only when no apply results are failed; otherwise retain current draft for correction and retry.
+- Impact: Gate post-apply baseline reset on `failed` status absence.
+
 ## 2026-02-14 20:32 - Step 27 - Keep report grouping formatter pure and testable
 - Context: Rendering grouped done/failed/skipped apply results in TUI report view.
 - Learning: Extracting report grouping/line formatting to a pure helper keeps status semantics testable without OpenTUI runtime coupling.
